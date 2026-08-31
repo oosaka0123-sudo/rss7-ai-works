@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "project": "RSS7 AI Works",
+  "repository": "oosaka0123-sudo/rss7-ai-works",
+  "phase": "phase-1",
+  "goal": "low-risk website updates can be executed automatically and safely",
+  "source_of_truth": {
+    "tasks": "github-issues",
+    "work": "github-pull-requests",
+    "code": "main"
+  },
+  "agents": {
+    "pm": "chatgpt",
+    "primary_implementation": "jules",
+    "review": "github-copilot",
+    "mechanical_checks": "github-actions",
+    "fallback_implementation": "claude-code"
+  },
+  "automation": {
+    "state_writer": "github-actions-only",
+    "auto_merge": false,
+    "auto_deploy": false,
+    "production_verification": false,
+    "automatic_rollback": false
+  },
+  "safety": {
+    "max_retries": 3,
+    "phase1_max_parallel_implementation_issues": 1,
+    "human_approval_label": "needs-human-approval"
+  },
+  "current": {
+    "status": "bootstrapping",
+    "active_issue": null,
+    "last_merged_pr": null,
+    "last_verified_commit": null,
+    "last_deploy_check": null,
+    "blocked_reason": null
+  },
+  "updated_at": "2026-09-01T08:00:00+09:00",
+  "updated_by": "bootstrap"
+}
