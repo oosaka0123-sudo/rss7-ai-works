@@ -46,7 +46,6 @@ jobs:
         run: |
           set -euo pipefail
           num="${{ steps.issue.outputs.number }}"
-          title=$(jq -r '.title' /tmp/issue.json)
           body=$(jq -r '.body // ""' /tmp/issue.json)
           state=$(jq -r '.state' /tmp/issue.json)
           labels=$(jq -r '[.labels[].name] | join(",")' /tmp/issue.json)
@@ -207,5 +206,6 @@ jobs:
         run: |
           set -euo pipefail
           num="${{ steps.issue.outputs.number }}"
-          gh issue edit "$num" --repo "$REPO" --remove-label "status:todo" --add-label "status:doing" >/dev/null || true
+          gh issue edit "$num" --repo "$REPO" --add-label "status:doing" >/dev/null
+          gh issue edit "$num" --repo "$REPO" --remove-label "status:todo" >/dev/null || true
           gh issue comment "$num" --repo "$REPO" --body "Julesを自動起動しました。Session: ${{ steps.jules.outputs.session_url }}\n\n<!-- jules-session:${{ steps.jules.outputs.session_name }} -->" >/dev/null
