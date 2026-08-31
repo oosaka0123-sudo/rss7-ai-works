@@ -10,6 +10,9 @@
 <meta property="og:title" content="ブログ | RSS7 AI Works">
 <meta property="og:description" content="AI・WEB・動画・SNSの最新情報を発信。">
 <meta property="og:url" content="https://rss7.net/blog.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://rss7.net/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://rss7.net/blog.html">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23020408' rx='15'/%3E%3Ctext y='.85em' font-size='52' x='8' fill='%2300aaff' font-family='monospace' font-weight='bold'%3ER7%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -276,7 +279,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
   </div>
 </div>
 
-<footer><p>© 2026 RSS7 AI Works All Rights Reserved.</p></footer>
+<footer><p><a href="privacy.html" style="color:var(--blue);">プライバシーポリシー</a><br>© 2026 RSS7 AI Works All Rights Reserved.</p></footer>
 
 <script>
 // サーバーから記事を読み込む
@@ -288,14 +291,32 @@ let currentTag = '';
 async function loadArticles(){
   try {
     const res = await fetch(API_URL + '?status=published');
+    if(!res.ok) throw new Error(`API error: ${res.status}`);
     const data = await res.json();
-    if(data.success){
-      articles = data.articles;
+    if(!data.success || !Array.isArray(data.articles) || !data.articles.length){
+      throw new Error('API returned no published articles');
+    }
+    articles = data.articles;
+    renderArticles(currentCat, currentTag);
+    renderTagCloud();
+  } catch(e) {
+    // GitHubや静的プレビューでは公開JSONを使用する
+    try {
+      const fallbackRes = await fetch('data/articles.json');
+      if(!fallbackRes.ok) throw new Error(`Fallback error: ${fallbackRes.status}`);
+      const fallbackData = await fallbackRes.json();
+      const fallbackArticles = Array.isArray(fallbackData) ? fallbackData : fallbackData.articles;
+      if(!Array.isArray(fallbackArticles) || !fallbackArticles.length){
+        throw new Error('Fallback returned no articles');
+      }
+      articles = fallbackArticles.filter(a=>!a.status || a.status==='published');
       renderArticles(currentCat, currentTag);
       renderTagCloud();
+      return;
+    } catch(fallbackError) {
+      console.warn('記事APIと公開JSONを読み込めませんでした。', fallbackError);
     }
-  } catch(e) {
-    // フォールバック：サンプルデータ
+    // 最終フォールバック：最小サンプルデータ
     articles = [
   {
     id:'1',
@@ -357,13 +378,59 @@ async function loadArticles(){
   }
 }
 
+function escapeHTML(value){
+  return String(value ?? '').replace(/[&<>"']/g, c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+// 記事本文は許可した要素・属性だけを残す（API/JSON由来HTMLのXSS対策）
+function sanitizeArticleHTML(value){
+  const allowedTags = new Set(['P','BR','H2','H3','H4','UL','OL','LI','STRONG','EM','B','I','BLOCKQUOTE','A','CODE','PRE','HR']);
+  const doc = new DOMParser().parseFromString(`<div>${String(value ?? '')}</div>`, 'text/html');
+  [...doc.body.querySelectorAll('*')].forEach(el=>{
+    if(!allowedTags.has(el.tagName)){
+      el.replaceWith(...el.childNodes);
+      return;
+    }
+    const rawHref = el.tagName === 'A' ? (el.getAttribute('href') || '') : '';
+    [...el.attributes].forEach(attr=>el.removeAttribute(attr.name));
+    if(el.tagName === 'A'){
+      try {
+        const parsed = new URL(rawHref, window.location.href);
+        if(!['http:','https:'].includes(parsed.protocol)) el.removeAttribute('href');
+        else {
+          el.setAttribute('href', parsed.href);
+          el.setAttribute('target', '_blank');
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
+      } catch(e) { el.removeAttribute('href'); }
+    }
+  });
+  return doc.body.firstElementChild?.innerHTML || '';
+}
+
+function safeImageUrl(value){
+  const url = String(value ?? '').trim();
+  if(!url) return '';
+  if(url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return url;
+  try {
+    const parsed = new URL(url, window.location.href);
+    return parsed.protocol === 'https:' ? parsed.href : '';
+  } catch(e) {
+    return '';
+  }
+}
+
 // タグクラウド描画
 function renderTagCloud(){
   const tags = [...new Set(articles.map(a=>a.tag).filter(t=>t&&t.trim()))];
   if(!tags.length){ document.getElementById('tagCloud').style.display='none'; return; }
-  document.getElementById('tagCloud').innerHTML =
+  const cloud = document.getElementById('tagCloud');
+  cloud.innerHTML =
     `<span class="tag-cloud-label">TAG:</span>` +
-    tags.map(t=>`<button class="tag-pill${currentTag===t?' active':''}" onclick="filterTag('${t}')"># ${t}</button>`).join('');
+    tags.map(t=>`<button type="button" class="tag-pill${currentTag===t?' active':''}" data-tag="${escapeHTML(t)}"># ${escapeHTML(t)}</button>`).join('');
+  cloud.querySelectorAll('.tag-pill').forEach(btn=>btn.addEventListener('click', ()=>filterTag(btn.dataset.tag || '')));
 }
 
 // タグ絞り込み
@@ -400,25 +467,39 @@ function renderArticles(cat, tag){
     return;
   }
 
-  grid.innerHTML = filtered.map(a=>`
-    <div class="blog-card fi" onclick="openModal('${a.id}')">
+  grid.innerHTML = filtered.map(a=>{
+    const imageUrl = safeImageUrl(a.image);
+    return `
+    <div class="blog-card fi" role="button" tabindex="0" data-article-id="${escapeHTML(String(a.id))}">
       <div class="blog-thumb">
-        ${a.image
-          ? `<img src="${a.image}" alt="${a.title}" loading="lazy">`
-          : `<div class="blog-thumb-placeholder">${a.emoji||'📝'}</div>`}
-        <span class="blog-cat">${a.cat}</span>
+        ${imageUrl
+          ? `<img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(a.title)}" loading="lazy">`
+          : `<div class="blog-thumb-placeholder">${escapeHTML(a.emoji||'📝')}</div>`}
+        <span class="blog-cat">${escapeHTML(a.cat)}</span>
       </div>
       <div class="blog-body">
-        <span class="blog-date">${a.date}</span>
-        <h3 class="blog-title">${a.title}</h3>
-        <p class="blog-excerpt">${a.excerpt||''}</p>
+        <span class="blog-date">${escapeHTML(a.date)}</span>
+        <h3 class="blog-title">${escapeHTML(a.title)}</h3>
+        <p class="blog-excerpt">${escapeHTML(a.excerpt||'')}</p>
         <div class="blog-footer">
-          ${a.tag ? `<button class="blog-tag" onclick="event.stopPropagation();filterTag('${a.tag}')"># ${a.tag}</button>` : '<span></span>'}
+          ${a.tag ? `<button type="button" class="blog-tag" data-tag="${escapeHTML(a.tag)}"># ${escapeHTML(a.tag)}</button>` : '<span></span>'}
           <span class="blog-arrow">→</span>
         </div>
       </div>
     </div>
-  `).join('');
+  `}).join('');
+
+  grid.querySelectorAll('.blog-card').forEach(card=>{
+    const open = ()=>openModal(card.dataset.articleId || '');
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', event=>{
+      if(event.key==='Enter'||event.key===' '){ event.preventDefault(); open(); }
+    });
+  });
+  grid.querySelectorAll('.blog-tag').forEach(btn=>btn.addEventListener('click', event=>{
+    event.stopPropagation();
+    filterTag(btn.dataset.tag || '');
+  }));
 
   setTimeout(()=>{
     document.querySelectorAll('.fi').forEach(el=>{ obs.observe(el); });
@@ -438,13 +519,14 @@ function filterCat(cat, btn){
 function openModal(id){
   const a = articles.find(x=>String(x.id)===String(id));
   if(!a) return;
-  document.getElementById('modalImg').innerHTML = a.image
-    ? `<img class="modal-img" src="${a.image}" alt="${a.title}">`
-    : `<div class="modal-img-placeholder">${a.emoji||'📝'}</div>`;
+  const imageUrl = safeImageUrl(a.image);
+  document.getElementById('modalImg').innerHTML = imageUrl
+    ? `<img class="modal-img" src="${escapeHTML(imageUrl)}" alt="${escapeHTML(a.title)}">`
+    : `<div class="modal-img-placeholder">${escapeHTML(a.emoji||'📝')}</div>`;
   document.getElementById('modalCat').textContent = a.cat;
   document.getElementById('modalDate').textContent = a.date;
   document.getElementById('modalTitle').textContent = a.title;
-  document.getElementById('modalBody').innerHTML = a.body||'';
+  document.getElementById('modalBody').innerHTML = sanitizeArticleHTML(a.body);
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
