@@ -144,13 +144,15 @@ def check_html() -> None:
 
 
 def check_files() -> None:
-    forbidden_paths = {"auto_post.php", "data/auto_post.php", "upload.php", "php.ini", "rss7-complete.zip"}
+    forbidden_names = {"auto_post.php", "upload.php", "php.ini", "rss7-complete.zip"}
+    allowed_exception_paths = {"api/upload.php"}
     forbidden_suffixes = {".zip", ".bak", ".log"}
     for path in ROOT.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
             continue
         relative = path.relative_to(ROOT)
-        if relative.as_posix() in forbidden_paths or path.suffix.lower() in forbidden_suffixes:
+        if ((path.name in forbidden_names and relative.as_posix() not in allowed_exception_paths)
+                or path.suffix.lower() in forbidden_suffixes):
             error(f"公開禁止ファイル: {relative}")
         if path.name == "config.local.php":
             error(f"秘密設定ファイルが登録されています: {relative}")

@@ -13,7 +13,7 @@ function read_articles(): array
 
 function write_articles_atomic(array $data): void
 {
-    $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
     $temporary = ARTICLES_FILE . '.tmp.' . bin2hex(random_bytes(6));
     if ($json === false || file_put_contents($temporary, $json . "\n", LOCK_EX) === false || !rename($temporary, ARTICLES_FILE)) {
         if (is_file($temporary)) @unlink($temporary);
