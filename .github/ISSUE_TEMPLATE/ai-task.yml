@@ -1,0 +1,69 @@
+name: AI Task
+description: Jules-firstのサイト更新・修正タスク
+title: "[AI Task] "
+labels:
+  - "agent:jules"
+  - "status:todo"
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: 何を実現するかを短く書く
+      placeholder: 例）トップページのお知らせ文を最新内容へ更新する
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: 変更してよい範囲・対象ページ
+      placeholder: 例）index.html のお知らせ欄のみ
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk
+      description: 迷う場合はmedium以上を選ぶ
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: 完了条件を箇条書きで書く
+      placeholder: |
+        - 表示崩れがない
+        - 既存URLを変更しない
+        - quality workflowが通る
+    validations:
+      required: true
+
+  - type: textarea
+    id: forbidden
+    attributes:
+      label: Do Not Change
+      description: 絶対に触らない範囲があれば書く
+      placeholder: 例）robots.txt、sitemap.xml、フォーム処理
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Notes
+      description: 参考情報や補足
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Safety Confirmation
+      options:
+        - label: 秘密情報・APIキー・パスワードをIssue本文に書いていない
+          required: true
