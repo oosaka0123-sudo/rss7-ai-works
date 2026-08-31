@@ -1,0 +1,30 @@
+name: Setup AI labels
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/setup-ai-labels.yml'
+
+permissions:
+  issues: write
+
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create or update labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh label create "agent:jules" --repo "$REPO" --color "4285F4" --description "Primary implementation: Jules" --force
+          gh label create "agent:claude" --repo "$REPO" --color "D4A373" --description "Escalated implementation: Claude Code" --force
+          gh label create "status:todo" --repo "$REPO" --color "D3D3D3" --description "Ready for triage or execution" --force
+          gh label create "status:doing" --repo "$REPO" --color "FBCA04" --description "Implementation in progress" --force
+          gh label create "status:blocked" --repo "$REPO" --color "B60205" --description "Automation stopped; intervention required" --force
+          gh label create "needs-human-approval" --repo "$REPO" --color "D93F0B" --description "High-risk change requiring explicit human approval" --force
+          gh label create "risk:low" --repo "$REPO" --color "0E8A16" --description "Eligible for future low-risk automation" --force
+          gh label create "risk:medium" --repo "$REPO" --color "FBCA04" --description "Requires additional checks" --force
+          gh label create "risk:high" --repo "$REPO" --color "B60205" --description "Must not auto-merge" --force

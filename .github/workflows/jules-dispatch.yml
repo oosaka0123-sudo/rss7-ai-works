@@ -1,0 +1,211 @@
+name: Dispatch low-risk task to Jules
+
+on:
+  issues:
+    types: [opened, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to dispatch
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: jules-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Resolve issue
+        id: issue
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            num="${{ inputs.issue_number }}"
+          else
+            num="${{ github.event.issue.number }}"
+          fi
+          data=$(gh issue view "$num" --repo "$REPO" --json number,title,body,labels,state)
+          echo "number=$num" >> "$GITHUB_OUTPUT"
+          printf '%s' "$data" > /tmp/issue.json
+
+      - name: Triage risk and eligibility
+        id: triage
+        shell: bash
+        run: |
+          set -euo pipefail
+          num="${{ steps.issue.outputs.number }}"
+          body=$(jq -r '.body // ""' /tmp/issue.json)
+          state=$(jq -r '.state' /tmp/issue.json)
+          labels=$(jq -r '[.labels[].name] | join(",")' /tmp/issue.json)
+
+          if [ "$state" != "OPEN" ]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ ",$labels," != *",agent:jules,"* ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          risk=$(printf '%s\n' "$body" | awk '
+            /^### Risk[[:space:]]*$/ {found=1; next}
+            found && /^[[:space:]]*$/ {next}
+            found {print tolower($0); exit}
+          ' | tr -d '\r')
+
+          case "$risk" in
+            low)
+              gh issue edit "$num" --repo "$REPO" --add-label "risk:low" >/dev/null
+              ;;
+            medium)
+              gh issue edit "$num" --repo "$REPO" --add-label "risk:medium" >/dev/null
+              echo "eligible=false" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+            high)
+              gh issue edit "$num" --repo "$REPO" --add-label "risk:high" --add-label "needs-human-approval" >/dev/null
+              echo "eligible=false" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+            *)
+              gh issue comment "$num" --repo "$REPO" --body "Riskを判定できないためJules自動実行を開始しません。IssueフォームのRiskを確認してください。" >/dev/null
+              echo "eligible=false" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+          esac
+
+          if [[ ",$labels," == *",status:doing,"* ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          active=$(gh issue list --repo "$REPO" --state open --label "status:doing" --json number --jq '.[].number' | grep -v "^${num}$" || true)
+          if [ -n "$active" ]; then
+            gh issue comment "$num" --repo "$REPO" --body "Phase 1ではJules自動実装は同時1件です。現在のタスク完了後に再実行してください。" >/dev/null
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+
+      - name: Check Jules API configuration
+        if: steps.triage.outputs.eligible == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          num="${{ steps.issue.outputs.number }}"
+          if [ -z "${JULES_API_KEY:-}" ]; then
+            gh issue comment "$num" --repo "$REPO" --body "Jules自動実行の準備は完了していますが、GitHub Actions Secret \`JULES_API_KEY\` が未設定です。" >/dev/null
+            exit 1
+          fi
+
+      - name: Discover Jules source
+        if: steps.triage.outputs.eligible == 'true'
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          owner="${REPO%%/*}"
+          repo_name="${REPO##*/}"
+          curl -fsS \
+            -H "x-goog-api-key: $JULES_API_KEY" \
+            "https://jules.googleapis.com/v1alpha/sources?pageSize=100" \
+            > /tmp/sources.json
+
+          source=$(jq -r --arg owner "$owner" --arg repo "$repo_name" '
+            .sources[]? | select(.githubRepo.owner == $owner and .githubRepo.repo == $repo) | .name
+          ' /tmp/sources.json | head -n 1)
+
+          if [ -z "$source" ] || [ "$source" = "null" ]; then
+            num="${{ steps.issue.outputs.number }}"
+            gh issue comment "$num" --repo "$REPO" --body "Jules側でこのGitHubリポジトリが見つかりません。JulesのGitHub連携でリポジトリを許可してください。" >/dev/null
+            exit 1
+          fi
+          echo "name=$source" >> "$GITHUB_OUTPUT"
+
+      - name: Start Jules session
+        if: steps.triage.outputs.eligible == 'true'
+        id: jules
+        shell: bash
+        env:
+          SOURCE: ${{ steps.source.outputs.name }}
+        run: |
+          set -euo pipefail
+          num="${{ steps.issue.outputs.number }}"
+          title=$(jq -r '.title' /tmp/issue.json)
+          body=$(jq -r '.body // ""' /tmp/issue.json)
+
+          prompt=$(cat <<EOF
+          Work on GitHub Issue #${num} in ${REPO}.
+
+          Read AGENTS.md and follow it strictly.
+          This is a low-risk Jules-first task.
+          Make the smallest safe change, run repository checks, self-review the diff, and create a pull request.
+          Do not directly edit PROJECT_STATE.json or STATUS.md.
+          Do not touch high-risk areas unless the Issue explicitly allows it; if high risk becomes necessary, stop and report why.
+          In the pull request body include: Closes #${num}
+
+          Issue title:
+          ${title}
+
+          Issue body:
+          ${body}
+          EOF
+          )
+
+          payload=$(jq -n \
+            --arg prompt "$prompt" \
+            --arg title "$title" \
+            --arg source "$SOURCE" \
+            '{
+              prompt: $prompt,
+              title: $title,
+              sourceContext: {
+                source: $source,
+                githubRepoContext: {startingBranch: "main"}
+              },
+              requirePlanApproval: false,
+              automationMode: "AUTO_CREATE_PR"
+            }')
+
+          response=$(curl -fsS -X POST \
+            -H "x-goog-api-key: $JULES_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "https://jules.googleapis.com/v1alpha/sessions")
+
+          printf '%s' "$response" > /tmp/jules-session.json
+          session_name=$(jq -r '.name' /tmp/jules-session.json)
+          session_url=$(jq -r '.url' /tmp/jules-session.json)
+
+          if [ -z "$session_name" ] || [ "$session_name" = "null" ]; then
+            echo "Jules session was not created."
+            cat /tmp/jules-session.json
+            exit 1
+          fi
+
+          echo "session_name=$session_name" >> "$GITHUB_OUTPUT"
+          echo "session_url=$session_url" >> "$GITHUB_OUTPUT"
+
+      - name: Mark issue in progress
+        if: steps.triage.outputs.eligible == 'true' && steps.jules.outputs.session_name != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          num="${{ steps.issue.outputs.number }}"
+          gh issue edit "$num" --repo "$REPO" --add-label "status:doing" >/dev/null
+          gh issue edit "$num" --repo "$REPO" --remove-label "status:todo" >/dev/null || true
+          gh issue comment "$num" --repo "$REPO" --body "Julesを自動起動しました。Session: ${{ steps.jules.outputs.session_url }}\n\n<!-- jules-session:${{ steps.jules.outputs.session_name }} -->" >/dev/null

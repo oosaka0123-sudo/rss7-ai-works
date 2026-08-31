@@ -1,0 +1,156 @@
+name: Monitor Jules sessions
+
+on:
+  schedule:
+    - cron: '37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: jules-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Monitor active Jules issues
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${JULES_API_KEY:-}" ]; then
+            echo "JULES_API_KEY is not configured; monitor is inactive."
+            exit 0
+          fi
+
+          owner="${REPO%%/*}"
+          repo_name="${REPO##*/}"
+
+          curl -fsS \
+            -H "x-goog-api-key: $JULES_API_KEY" \
+            "https://jules.googleapis.com/v1alpha/sources?pageSize=100" \
+            > /tmp/sources.json
+
+          source=$(jq -r --arg owner "$owner" --arg repo "$repo_name" '
+            .sources[]? | select(.githubRepo.owner == $owner and .githubRepo.repo == $repo) | .name
+          ' /tmp/sources.json | head -n 1)
+
+          if [ -z "$source" ] || [ "$source" = "null" ]; then
+            echo "Repository is not available as a Jules source."
+            exit 0
+          fi
+
+          gh issue list --repo "$REPO" --state open --label "status:doing" --limit 100 --json number,title,body > /tmp/doing.json
+          count=$(jq 'length' /tmp/doing.json)
+          [ "$count" -eq 0 ] && exit 0
+
+          jq -c '.[]' /tmp/doing.json | while read -r issue; do
+            number=$(jq -r '.number' <<<"$issue")
+            title=$(jq -r '.title' <<<"$issue")
+            body=$(jq -r '.body // ""' <<<"$issue")
+
+            comments=$(gh api "repos/$REPO/issues/$number/comments" --paginate --jq '.[].body' || true)
+            session_name=$(printf '%s\n' "$comments" | grep -oE '<!-- jules-session:sessions/[^ ]+ -->' | tail -n 1 | sed -E 's/<!-- jules-session:([^ ]+) -->/\1/' || true)
+
+            if [ -z "$session_name" ]; then
+              echo "Issue #$number has no Jules session marker."
+              continue
+            fi
+
+            session=$(curl -fsS \
+              -H "x-goog-api-key: $JULES_API_KEY" \
+              "https://jules.googleapis.com/v1alpha/$session_name" || true)
+
+            state=$(jq -r '.state // "UNKNOWN"' <<<"$session" 2>/dev/null || echo UNKNOWN)
+            echo "Issue #$number Jules state: $state"
+
+            case "$state" in
+              COMPLETED)
+                pr_url=$(jq -r '.outputs[]?.pullRequest.url // empty' <<<"$session" | head -n 1)
+                if [ -n "$pr_url" ] && ! printf '%s\n' "$comments" | grep -F '<!-- jules-completed -->' >/dev/null; then
+                  gh issue comment "$number" --repo "$REPO" --body "Julesの実装が完了しました。PR: $pr_url\n\n<!-- jules-completed -->" >/dev/null
+                fi
+                ;;
+
+              FAILED)
+                last_retry=$(printf '%s\n' "$comments" | grep -oE '<!-- jules-retry:[0-9]+ -->' | tail -n 1 | grep -oE '[0-9]+' || true)
+                retry=${last_retry:-0}
+
+                if [ "$retry" -ge 3 ]; then
+                  gh issue edit "$number" --repo "$REPO" --remove-label "status:doing" --add-label "status:blocked" >/dev/null || true
+                  gh issue comment "$number" --repo "$REPO" --body "Julesの自動再試行が3回に達したためblockedにしました。Claude Codeまたは人間判断へエスカレーションしてください。" >/dev/null
+                  continue
+                fi
+
+                next=$((retry + 1))
+                prompt=$(cat <<EOF
+          Retry ${next}/3 for GitHub Issue #${number} in ${REPO}.
+
+          Read AGENTS.md and follow it strictly.
+          The previous Jules session failed. Re-evaluate the task rather than repeating the exact same failed approach.
+          Make the smallest safe change, run repository checks, self-review the diff, and create a pull request.
+          Do not directly edit PROJECT_STATE.json or STATUS.md.
+          If the task requires a high-risk change or cannot be completed safely, stop instead of guessing.
+          In the pull request body include: Closes #${number}
+
+          Issue title:
+          ${title}
+
+          Issue body:
+          ${body}
+          EOF
+                )
+
+                payload=$(jq -n \
+                  --arg prompt "$prompt" \
+                  --arg title "$title" \
+                  --arg source "$source" \
+                  '{
+                    prompt: $prompt,
+                    title: $title,
+                    sourceContext: {
+                      source: $source,
+                      githubRepoContext: {startingBranch: "main"}
+                    },
+                    requirePlanApproval: false,
+                    automationMode: "AUTO_CREATE_PR"
+                  }')
+
+                response=$(curl -fsS -X POST \
+                  -H "x-goog-api-key: $JULES_API_KEY" \
+                  -H "Content-Type: application/json" \
+                  -d "$payload" \
+                  "https://jules.googleapis.com/v1alpha/sessions")
+
+                new_name=$(jq -r '.name // empty' <<<"$response")
+                new_url=$(jq -r '.url // empty' <<<"$response")
+                if [ -z "$new_name" ]; then
+                  gh issue edit "$number" --repo "$REPO" --remove-label "status:doing" --add-label "status:blocked" >/dev/null || true
+                  gh issue comment "$number" --repo "$REPO" --body "Jules再試行セッションの作成に失敗したためblockedにしました。" >/dev/null
+                  continue
+                fi
+
+                gh issue comment "$number" --repo "$REPO" --body "Julesを自動再試行します（${next}/3）。Session: ${new_url}\n\n<!-- jules-retry:${next} -->\n<!-- jules-session:${new_name} -->" >/dev/null
+                ;;
+
+              AWAITING_USER_FEEDBACK|AWAITING_PLAN_APPROVAL|PAUSED)
+                gh issue edit "$number" --repo "$REPO" --remove-label "status:doing" --add-label "status:blocked" >/dev/null || true
+                gh issue comment "$number" --repo "$REPO" --body "Julesが自動継続できない状態（$state）になったためblockedにしました。" >/dev/null
+                ;;
+
+              QUEUED|PLANNING|IN_PROGRESS)
+                ;;
+
+              *)
+                echo "Unknown Jules state for issue #$number; leaving unchanged."
+                ;;
+            esac
+          done
