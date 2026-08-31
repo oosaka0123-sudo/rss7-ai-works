@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サービス一覧 | RSS7 AI Works | ホームページ制作・AI動画・アプリ開発【大阪】</title>
+<meta name="description" content="RSS7 AI Worksのサービス一覧。WEB制作・アプリ開発・AI動画CM制作・AI導入コンサル・自分史ビデオ・SNS運用代行・AI楽曲制作・LINE公式設定。大阪から全国対応。無料相談受付中。">
+<meta name="keywords" content="ホームページ制作,AI動画CM制作,アプリ開発,AI導入,SNS運用,大阪">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="サービス一覧 | RSS7 AI Works">
+<meta property="og:description" content="WEB制作・AI動画・アプリ開発など8つのサービスで、あなたのビジネスをトータルサポート。">
+<meta property="og:url" content="https://rss7.net/services.html">
+<link rel="canonical" href="https://rss7.net/services.html">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23020408' rx='15'/%3E%3Ctext y='.85em' font-size='52' x='8' fill='%2300aaff' font-family='monospace' font-weight='bold'%3ER7%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020408;--bg2:#060d14;--card:#0a1520;
+  --blue:#00aaff;--cyan:#00ffee;--white:#e8f4ff;--gray:#5a7a9a;
+  --border:rgba(0,170,255,0.12);--glow:rgba(0,170,255,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-serif;overflow-x:hidden;}
+
+header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,4,8,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:0.1em;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:12px;}
+.logo-mark{width:36px;height:36px;border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;}
+.logo-mark span{font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:900;color:var(--blue);}
+.logo em{color:var(--blue);font-style:normal;}
+.nav-links{display:flex;gap:5px;align-items:center;}
+.nav-link{padding:6px 14px;font-size:0.65rem;font-family:'Share Tech Mono',monospace;letter-spacing:0.1em;text-decoration:none;border:1px solid var(--border);color:var(--gray);transition:all 0.3s;}
+.nav-link:hover,.nav-link.active{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,0.05);}
+.menu-btn{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:5px;background:none;border:none;}
+.menu-btn span{width:24px;height:2px;background:var(--blue);display:block;}
+.mobile-menu{display:none;position:fixed;top:70px;left:0;right:0;background:rgba(2,4,8,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:20px 30px;z-index:999;flex-direction:column;gap:10px;}
+.mobile-menu.open{display:flex;}
+@media(max-width:768px){.nav-links{display:none;}.menu-btn{display:flex;}.mobile-menu .nav-link{display:block;text-align:center;padding:12px;}}
+
+.page-hero{padding:140px 30px 80px;text-align:center;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(0,100,200,0.07) 0%,transparent 70%);}
+.ph-label{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.4em;color:var(--blue);margin-bottom:20px;display:block;}
+.ph-title{font-family:'Orbitron',monospace;font-size:clamp(2.5rem,7vw,5rem);font-weight:900;letter-spacing:0.05em;line-height:1;margin-bottom:20px;}
+.ph-desc{font-size:0.9rem;color:var(--gray);line-height:1.9;max-width:500px;margin:0 auto;font-weight:300;}
+
+.section{padding:80px 30px;max-width:1100px;margin:0 auto;}
+.s-label{font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:0.4em;color:var(--blue);display:flex;align-items:center;gap:12px;margin-bottom:15px;}
+.s-label::before{content:'';width:20px;height:1px;background:var(--blue);}
+.s-title{font-family:'Orbitron',monospace;font-size:clamp(1.8rem,4vw,3rem);font-weight:700;letter-spacing:0.05em;margin-bottom:15px;}
+.s-desc{font-size:0.88rem;color:var(--gray);line-height:1.9;max-width:480px;font-weight:300;margin-bottom:50px;}
+
+.service-detail{margin-bottom:80px;}
+.sd-header{display:flex;align-items:center;gap:20px;margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.sd-num{font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;color:rgba(0,170,255,0.15);line-height:1;}
+.sd-icon{font-size:2.5rem;}
+.sd-info h2{font-family:'Orbitron',monospace;font-size:1.3rem;letter-spacing:0.08em;color:var(--white);margin-bottom:5px;}
+.sd-info span{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--blue);letter-spacing:0.2em;}
+.sd-body{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+@media(max-width:600px){.sd-body{grid-template-columns:1fr;}}
+.sd-text p{font-size:0.85rem;color:var(--gray);line-height:2;font-weight:300;margin-bottom:15px;}
+.sd-features{background:var(--bg2);border:1px solid var(--border);padding:25px;}
+.sd-features h3{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.25em;color:var(--blue);margin-bottom:15px;}
+.sd-features li{font-size:0.8rem;color:var(--gray);padding:8px 0;border-bottom:1px solid rgba(0,170,255,0.05);list-style:none;display:flex;align-items:center;gap:10px;}
+.sd-features li::before{content:'▸';color:var(--blue);font-size:0.7rem;}
+.sd-price{margin-top:20px;padding:15px;background:rgba(0,170,255,0.05);border:1px solid rgba(0,170,255,0.1);}
+.sd-price span{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;color:var(--cyan);}
+.divider{width:100vw;margin-left:calc(-50vw + 50%);height:1px;background:linear-gradient(to right,transparent,var(--blue),transparent);opacity:0.15;margin:20px 0;}
+
+.cta-bar{width:100vw;margin-left:calc(-50vw + 50%);background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:60px 30px;text-align:center;}
+.cta-bar h2{font-family:'Orbitron',monospace;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:15px;letter-spacing:0.05em;}
+.cta-bar p{font-size:0.85rem;color:var(--gray);margin-bottom:30px;font-weight:300;}
+.btn-p{padding:16px 45px;background:var(--blue);color:#020408;font-family:'Orbitron',monospace;font-size:0.72rem;font-weight:700;letter-spacing:0.15em;text-decoration:none;transition:all 0.3s;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));display:inline-block;}
+.btn-p:hover{background:var(--cyan);box-shadow:0 0 30px rgba(0,255,238,0.3);}
+
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:30px;text-align:center;}
+footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--gray);letter-spacing:0.1em;}
+
+.fi{opacity:0;transform:translateY(20px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.fi.v{opacity:1;transform:translateY(0);}
+.scanline{position:fixed;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--blue),transparent);opacity:0.15;animation:scan 6s linear infinite;pointer-events:none;z-index:9998;}
+@keyframes scan{0%{top:0;}100%{top:100vh;}}
+
+/* LINE相談フローティングボタン */
+.line-float{
+  position:fixed;
+  bottom:25px;
+  right:25px;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#06C755 0%,#00B900 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 0 rgba(6,199,85,0.5);
+  z-index:998;
+  transition:transform 0.3s ease, box-shadow 0.3s ease;
+  animation:linePulse 2.4s ease-out infinite;
+}
+.line-float:hover{
+  transform:scale(1.08);
+  box-shadow:0 8px 30px rgba(6,199,85,0.6);
+}
+.line-float svg{
+  width:34px;
+  height:34px;
+  fill:#fff;
+}
+.line-float-label{
+  position:absolute;
+  right:74px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(2,4,8,0.9);
+  color:#fff;
+  font-size:0.72rem;
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:700;
+  padding:8px 14px;
+  border-radius:24px;
+  white-space:nowrap;
+  border:1px solid rgba(6,199,85,0.5);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s;
+}
+.line-float:hover .line-float-label{
+  opacity:1;
+}
+@keyframes linePulse{
+  0%{box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 0 rgba(6,199,85,0.5);}
+  70%{box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 16px rgba(6,199,85,0);}
+  100%{box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 0 rgba(6,199,85,0);}
+}
+@media(max-width:768px){
+  .line-float{
+    bottom:18px;
+    right:18px;
+    width:56px;
+    height:56px;
+  }
+  .line-float svg{width:30px;height:30px;}
+  .line-float-label{display:none;}
+}
+.mobile-menu .line-menu-btn{
+  background:linear-gradient(135deg,#06C755 0%,#00B900 100%);
+  color:#fff;
+  border:none;
+  font-weight:700;
+  letter-spacing:0.05em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.mobile-menu .line-menu-btn:hover{
+  background:linear-gradient(135deg,#00B900 0%,#009900 100%);
+  color:#fff;
+}
+.mobile-menu .line-menu-btn svg{
+  width:18px;
+  height:18px;
+  fill:currentColor;
+}
+/* PC版でもハンバーガー表示 */
+.menu-btn{display:flex !important;}
+.sub-nav{display:none !important;}
+
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<header>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><span>R7</span></div>
+    RSS7 <em>AI</em> Works
+  </a>
+  <nav class="nav-links">
+    <a href="index.html" class="nav-link">TOP</a>
+    <a href="services.html" class="nav-link active">SERVICES</a>
+    <a href="blog.html" class="nav-link">BLOG</a>
+    <a href="about.html" class="nav-link">ABOUT</a>
+    <a href="contact.html" class="nav-link">CONTACT</a>
+    <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
+    <a href="https://kiseki.rss7.net" class="nav-link">軌跡</a>
+  </nav>
+  <button class="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html" class="nav-link">TOP</a>
+  <a href="services.html" class="nav-link active">SERVICES</a>
+  <a href="blog.html" class="nav-link">BLOG</a>
+  <a href="about.html" class="nav-link">ABOUT</a>
+  <a href="contact.html" class="nav-link">CONTACT</a>
+  <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
+  <a href="https://kiseki.rss7.net" class="nav-link">映像工房 軌跡</a>
+</div>
+
+<div class="page-hero">
+  <span class="ph-label">WHAT WE OFFER</span>
+  <h1 class="ph-title">SERVICES</h1>
+  <p class="ph-desc">AIと最新技術を駆使した8つのサービス。あなたのビジネスをトータルサポートします。</p>
+</div>
+
+<div class="section">
+  <!-- 01 WEB制作 -->
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">01</div>
+      <div class="sd-icon">🌐</div>
+      <div class="sd-info">
+        <h2>WEB制作</h2>
+        <span>WEBSITE DEVELOPMENT</span>
+      </div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>ランディングページからコーポレートサイトまで、目的に合わせた最適なウェブサイトを制作します。</p>
+        <p>スマートフォン対応・SEO対策・表示速度の最適化まで、集客につながるサイトを構築します。</p>
+        <div class="sd-price"><span>¥50,000〜 / 納期 5〜10営業日</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>LP・コーポレートサイト・ECサイト</li>
+          <li>WordPress・HTML/CSS対応</li>
+          <li>スマホ完全対応（レスポンシブ）</li>
+          <li>SEO基本対策込み</li>
+          <li>お問い合わせフォーム設置</li>
+          <li>SSL・セキュリティ設定</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 02 アプリ開発 -->
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">02</div>
+      <div class="sd-icon">📱</div>
+      <div class="sd-info">
+        <h2>アプリ開発</h2>
+        <span>APP DEVELOPMENT</span>
+      </div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>iOS・Android対応のスマートフォンアプリを開発。業務効率化ツールから顧客向けサービスアプリまで幅広く対応します。</p>
+        <p>要件定義から設計・開発・リリースまで一貫してサポート。継続的な改善・アップデートも対応可能です。</p>
+        <div class="sd-price"><span>¥300,000〜 / 要相談</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>iOS / Android 両対応</li>
+          <li>PWA（Progressive Web App）</li>
+          <li>業務効率化・社内ツール</li>
+          <li>顧客向けサービスアプリ</li>
+          <li>API連携・データベース構築</li>
+          <li>リリース後のサポート対応</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 03 AI動画CM -->
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">03</div>
+      <div class="sd-icon">🎬</div>
+      <div class="sd-info">
+        <h2>AI動画CM制作</h2>
+        <span>AI VIDEO PRODUCTION</span>
+      </div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>AIが生成する次世代のCM動画。従来の制作費の数分の一のコストで、4K品質の映像をお届けします。</p>
+        <p>建設・美容・自動車など全業種対応。SNS広告・YouTube・テレビCMまで幅広い用途に活用できます。</p>
+        <div class="sd-price"><span>¥30,000〜 / 納期 3〜5営業日</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>15秒・30秒・60秒対応</li>
+          <li>4K品質の映像出力</li>
+          <li>ナレーション・BGM・テロップ付き</li>
+          <li>SNS用カット版も制作</li>
+          <li>全業種対応</li>
+          <li>修正対応あり</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 04 AI導入コンサル -->
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">04</div>
+      <div class="sd-icon">🤖</div>
+      <div class="sd-info">
+        <h2>AI導入コンサルティング</h2>
+        <span>AI CONSULTING</span>
+      </div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>業務へのAI活用を支援します。ChatGPT・画像生成AI・業務自動化ツールなど最新AIの導入から運用まで伴走します。</p>
+        <p>従業員向けAI研修・マニュアル作成も対応。会社全体のDX推進をサポートします。</p>
+        <div class="sd-price"><span>¥50,000〜 / 月額契約可</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>AI活用戦略の立案</li>
+          <li>ChatGPT・Gemini活用支援</li>
+          <li>業務自動化ツール導入</li>
+          <li>社員向けAI研修</li>
+          <li>プロンプト設計・最適化</li>
+          <li>継続サポート対応</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 05 自分史ビデオ -->
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">05</div>
+      <div class="sd-icon">📽️</div>
+      <div class="sd-info">
+        <h2>自分史・終活ビデオ</h2>
+        <span>MEMORY VIDEO</span>
+      </div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>思い出の写真・映像とエピソードをオリジナル楽曲付きの映像作品に仕上げます。大切な人への最高の贈り物に。</p>
+        <p>遺書ビデオ・記念日ムービー・家族への感謝動画など、あらゆるシーンに対応します。</p>
+        <div class="sd-price"><span>¥50,000〜 / 納期 2〜4週間</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>オリジナル楽曲制作込み</li>
+          <li>写真・映像の動画化</li>
+          <li>白黒写真のカラー化対応</li>
+          <li>ナレーション録音対応</li>
+          <li>DVD・データでお届け</li>
+          <li>丁寧なヒアリング付き</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 06〜08 -->
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">06</div>
+      <div class="sd-icon">📊</div>
+      <div class="sd-info"><h2>SNS運用代行</h2><span>SNS MANAGEMENT</span></div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>Instagram・LINE・TikTokの運用を完全代行。投稿企画・撮影・編集・分析・改善まで一括サポートします。</p>
+        <div class="sd-price"><span>¥30,000〜 / 月額</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>Instagram / TikTok / LINE</li>
+          <li>投稿企画・コンテンツ制作</li>
+          <li>月次レポート提出</li>
+          <li>広告運用も対応</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">07</div>
+      <div class="sd-icon">🎵</div>
+      <div class="sd-info"><h2>AI楽曲制作</h2><span>AI MUSIC PRODUCTION</span></div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>エピソードや想いをもとにAIがオリジナル楽曲を生成。動画BGMから商業利用・着信音まで幅広く対応します。</p>
+        <div class="sd-price"><span>¥20,000〜 / 1曲</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>オリジナル楽曲生成</li>
+          <li>歌詞・メロディ制作</li>
+          <li>著作権完全譲渡</li>
+          <li>動画BGM・CM音楽対応</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <div class="service-detail fi">
+    <div class="sd-header">
+      <div class="sd-num">08</div>
+      <div class="sd-icon">📧</div>
+      <div class="sd-info"><h2>LINE公式・メルマガ設定</h2><span>LINE & NEWSLETTER</span></div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-text">
+        <p>LINE公式アカウントの開設・設定から運用まで完全サポート。メルマガと組み合わせた効果的な集客導線を構築します。</p>
+        <div class="sd-price"><span>¥30,000〜 / 初期設定</span></div>
+      </div>
+      <div class="sd-features">
+        <h3>FEATURES</h3>
+        <ul>
+          <li>LINE公式アカウント開設</li>
+          <li>自動返信・リッチメニュー設定</li>
+          <li>メルマガシステム構築</li>
+          <li>集客導線設計</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-bar fi">
+  <h2>まずは無料相談から</h2>
+  <p>ご要望をお聞かせください。最適なプランをご提案します。</p>
+  <a href="contact.html" class="btn-p">無料相談を申し込む</a>
+</div>
+
+<footer><p>© 2026 RSS7 AI Works All Rights Reserved.</p></footer>
+
+<script>
+function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
+const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('v'),i*80);});},{threshold:0.05});
+document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+</script>
+<!-- LINE相談フローティングボタン -->
+<a href="https://lin.ee/RjoCIMX" target="_blank" rel="noopener" class="line-float" aria-label="LINEで相談">
+  <span class="line-float-label">LINEで無料相談</span>
+  <svg viewBox="0 0 24 24"><path d="M19.365 9.89c.50 0 .906.408.906.91 0 .5-.406.907-.906.907H17.59v1.135h1.775c.5 0 .906.41.906.91 0 .502-.406.91-.906.91H16.68c-.5 0-.907-.408-.907-.91V8.75c0-.5.407-.91.907-.91h2.686c.5 0 .906.41.906.91 0 .503-.406.91-.906.91H17.59v1.136h1.775zm-4.123 3.78c0 .392-.252.738-.625.858-.093.03-.19.045-.285.045-.297 0-.574-.148-.738-.39l-2.753-3.745v3.232c0 .5-.406.91-.906.91-.5 0-.905-.41-.905-.91V8.75c0-.392.25-.738.622-.858.093-.03.19-.044.287-.044.297 0 .575.148.74.39l2.752 3.746V8.75c0-.5.405-.91.905-.91.5 0 .907.41.907.91v4.92zm-6.74 0c0 .5-.407.91-.907.91-.5 0-.905-.41-.905-.91V8.75c0-.5.405-.91.905-.91s.906.41.906.91v4.92zm-2.43.91H3.388c-.498 0-.905-.41-.905-.91V8.75c0-.5.407-.91.905-.91.5 0 .906.41.906.91v4.01h1.777c.5 0 .906.41.906.91 0 .503-.404.91-.905.91M12 0C5.373 0 0 4.373 0 9.765c0 4.832 4.258 8.88 10.01 9.646.39.084.92.258 1.053.592.12.303.08.78.04 1.087l-.17 1.023c-.053.303-.24 1.186 1.04.645 1.28-.54 6.887-4.055 9.396-6.943C23.115 13.91 24 11.94 24 9.765 24 4.374 18.627 0 12 0"/></svg>
+</a>
+
+</body>
+</html>

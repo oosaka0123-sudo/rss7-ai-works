@@ -1,0 +1,24 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Archives, backups and runtime data
+*.zip
+*.bak
+*.log
+*.lock
+.DS_Store
+Thumbs.db
+# Excluded legacy/private files
+/auto_post.php
+/data/auto_post.php
+/README.txt
+/marlong.php
+/upload.php
+/php.ini
+/mt_abuse_20211129.txt
+/mailform2/
+/mailform_b/
+/rss7-private-hold/

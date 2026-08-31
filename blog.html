@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ブログ | RSS7 AI Works | AI・WEB・動画の最新情報</title>
+<meta name="description" content="RSS7 AI WorksのブログではAI活用・ホームページ制作・動画制作・SNS運用など最新のデジタルマーケティング情報を発信しています。">
+<meta name="keywords" content="AIブログ,WEB制作,動画制作,SNS運用,デジタルマーケティング,大阪">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="ブログ | RSS7 AI Works">
+<meta property="og:description" content="AI・WEB・動画・SNSの最新情報を発信。">
+<meta property="og:url" content="https://rss7.net/blog.html">
+<link rel="canonical" href="https://rss7.net/blog.html">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23020408' rx='15'/%3E%3Ctext y='.85em' font-size='52' x='8' fill='%2300aaff' font-family='monospace' font-weight='bold'%3ER7%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--bg2:#060d14;--card:#0a1520;--blue:#00aaff;--cyan:#00ffee;--white:#e8f4ff;--gray:#5a7a9a;--border:rgba(0,170,255,0.12);}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-serif;overflow-x:hidden;}
+header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,4,8,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:0.1em;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:12px;}
+.logo-mark{width:36px;height:36px;border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;}
+.logo-mark span{font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:900;color:var(--blue);}
+.logo em{color:var(--blue);font-style:normal;}
+.nav-links{display:flex;gap:5px;align-items:center;}
+.nav-link{padding:6px 14px;font-size:0.65rem;font-family:'Share Tech Mono',monospace;letter-spacing:0.1em;text-decoration:none;border:1px solid var(--border);color:var(--gray);transition:all 0.3s;}
+.nav-link:hover,.nav-link.active{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,0.05);}
+.menu-btn{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:5px;background:none;border:none;}
+.menu-btn span{width:24px;height:2px;background:var(--blue);display:block;}
+.mobile-menu{display:none;position:fixed;top:70px;left:0;right:0;background:rgba(2,4,8,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:20px 30px;z-index:999;flex-direction:column;gap:10px;}
+.mobile-menu.open{display:flex;}
+@media(max-width:768px){.nav-links{display:none;}.menu-btn{display:flex;}.mobile-menu .nav-link{display:block;text-align:center;padding:12px;}}
+
+.page-hero{padding:140px 30px 60px;text-align:center;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(0,100,200,0.07) 0%,transparent 70%);}
+.ph-label{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.4em;color:var(--blue);margin-bottom:20px;display:block;}
+.ph-title{font-family:'Orbitron',monospace;font-size:clamp(2.5rem,7vw,5rem);font-weight:900;letter-spacing:0.05em;margin-bottom:20px;}
+
+/* カテゴリタブ */
+.cat-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 30px 20px;}
+.cat-tab{padding:8px 18px;font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;border:1px solid var(--border);color:var(--gray);cursor:pointer;transition:all 0.3s;background:none;}
+.cat-tab:hover,.cat-tab.active{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,0.05);}
+
+/* タグクラウド */
+.tag-cloud{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 30px 40px;}
+.tag-cloud-label{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.25em;color:var(--gray);margin-right:5px;align-self:center;}
+.tag-pill{padding:5px 14px;font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;border:1px solid rgba(0,170,255,0.15);color:rgba(0,170,255,0.5);cursor:pointer;transition:all 0.3s;background:none;border-radius:20px;}
+.tag-pill:hover,.tag-pill.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,238,0.05);}
+
+/* 絞り込み中バナー */
+.filter-bar{max-width:1100px;margin:0 auto;padding:0 30px 15px;display:none;align-items:center;gap:10px;}
+.filter-bar.show{display:flex;}
+.filter-bar p{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--blue);}
+.filter-clear{padding:4px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;border:1px solid var(--red);color:var(--red);background:none;cursor:pointer;transition:all 0.3s;}
+.filter-clear:hover{background:var(--red);color:white;}
+
+/* ブロググリッド */
+.blog-grid{max-width:1100px;margin:0 auto;padding:0 30px 100px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
+
+.blog-card{background:var(--bg2);border:1px solid var(--border);overflow:hidden;transition:all 0.4s;cursor:pointer;display:block;text-decoration:none;}
+.blog-card:hover{border-color:var(--blue);transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,0.4);}
+
+.blog-thumb{width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;background:var(--card);}
+.blog-thumb img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s;}
+.blog-card:hover .blog-thumb img{transform:scale(1.05);}
+.blog-thumb-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:linear-gradient(135deg,var(--card),var(--bg));}
+
+.blog-cat{position:absolute;top:12px;left:12px;font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;padding:4px 10px;background:rgba(0,170,255,0.85);color:#020408;font-weight:700;}
+
+.blog-body{padding:25px 22px;}
+.blog-date{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.15em;color:var(--gray);margin-bottom:10px;display:block;}
+.blog-title{font-size:0.95rem;color:var(--white);line-height:1.6;margin-bottom:12px;font-weight:400;}
+.blog-card:hover .blog-title{color:var(--blue);}
+.blog-excerpt{font-size:0.78rem;color:var(--gray);line-height:1.8;font-weight:300;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.blog-footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:15px;border-top:1px solid var(--border);}
+.blog-tag{font-family:'Share Tech Mono',monospace;font-size:0.58rem;padding:3px 8px;border:1px solid rgba(0,170,255,0.15);color:rgba(0,170,255,0.5);}
+.blog-arrow{font-size:0.8rem;color:var(--gray);transition:all 0.3s;}
+.blog-card:hover .blog-arrow{color:var(--blue);transform:translateX(3px);}
+
+/* 記事詳細モーダル */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:80px 20px 40px;backdrop-filter:blur(5px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);max-width:780px;width:100%;position:relative;}
+.modal-close{position:fixed;top:20px;right:20px;width:40px;height:40px;border:1px solid var(--border);background:var(--bg);color:var(--white);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;z-index:10;}
+.modal-close:hover{border-color:var(--blue);color:var(--blue);}
+.modal-img{width:100%;aspect-ratio:16/9;object-fit:cover;}
+.modal-img-placeholder{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:4rem;background:linear-gradient(135deg,var(--card),var(--bg));}
+.modal-content{padding:40px;}
+.modal-meta{display:flex;gap:15px;align-items:center;margin-bottom:20px;}
+.modal-cat{font-family:'Share Tech Mono',monospace;font-size:0.62rem;padding:4px 12px;background:rgba(0,170,255,0.15);color:var(--blue);letter-spacing:0.15em;}
+.modal-date{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--gray);letter-spacing:0.1em;}
+.modal-title{font-size:1.3rem;color:var(--white);line-height:1.5;margin-bottom:25px;font-weight:400;}
+.modal-body{font-size:0.88rem;color:var(--gray);line-height:2;font-weight:300;}
+.modal-body p{margin-bottom:18px;}
+
+/* ブランドリンク */
+.brand-links{max-width:1100px;margin:0 auto;padding:0 30px 60px;display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+@media(max-width:600px){.brand-links{grid-template-columns:1fr;}}
+.brand-link-card{border:1px solid var(--border);padding:25px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;transition:all 0.3s;}
+.brand-link-card:hover{border-color:var(--blue);}
+.brand-link-card h3{font-family:'Orbitron',monospace;font-size:0.9rem;color:var(--white);margin-bottom:5px;}
+.brand-link-card p{font-size:0.72rem;color:var(--gray);}
+.brand-link-card span{font-size:1.2rem;color:var(--gray);transition:all 0.3s;}
+.brand-link-card:hover span{color:var(--blue);transform:translateX(3px);}
+
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:30px;text-align:center;}
+footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--gray);letter-spacing:0.1em;}
+.fi{opacity:0;transform:translateY(20px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.fi.v{opacity:1;transform:translateY(0);}
+.scanline{position:fixed;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--blue),transparent);opacity:0.15;animation:scan 6s linear infinite;pointer-events:none;z-index:9998;}
+@keyframes scan{0%{top:0;}100%{top:100vh;}}
+
+/* LINE相談フローティングボタン */
+.line-float{
+  position:fixed;
+  bottom:25px;
+  right:25px;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#06C755 0%,#00B900 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 0 rgba(6,199,85,0.5);
+  z-index:998;
+  transition:transform 0.3s ease, box-shadow 0.3s ease;
+  animation:linePulse 2.4s ease-out infinite;
+}
+.line-float:hover{
+  transform:scale(1.08);
+  box-shadow:0 8px 30px rgba(6,199,85,0.6);
+}
+.line-float svg{
+  width:34px;
+  height:34px;
+  fill:#fff;
+}
+.line-float-label{
+  position:absolute;
+  right:74px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(2,4,8,0.9);
+  color:#fff;
+  font-size:0.72rem;
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:700;
+  padding:8px 14px;
+  border-radius:24px;
+  white-space:nowrap;
+  border:1px solid rgba(6,199,85,0.5);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s;
+}
+.line-float:hover .line-float-label{
+  opacity:1;
+}
+@keyframes linePulse{
+  0%{box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 0 rgba(6,199,85,0.5);}
+  70%{box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 16px rgba(6,199,85,0);}
+  100%{box-shadow:0 6px 24px rgba(6,199,85,0.45),0 0 0 0 rgba(6,199,85,0);}
+}
+@media(max-width:768px){
+  .line-float{
+    bottom:18px;
+    right:18px;
+    width:56px;
+    height:56px;
+  }
+  .line-float svg{width:30px;height:30px;}
+  .line-float-label{display:none;}
+}
+.mobile-menu .line-menu-btn{
+  background:linear-gradient(135deg,#06C755 0%,#00B900 100%);
+  color:#fff;
+  border:none;
+  font-weight:700;
+  letter-spacing:0.05em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.mobile-menu .line-menu-btn:hover{
+  background:linear-gradient(135deg,#00B900 0%,#009900 100%);
+  color:#fff;
+}
+.mobile-menu .line-menu-btn svg{
+  width:18px;
+  height:18px;
+  fill:currentColor;
+}
+/* PC版でもハンバーガー表示 */
+.menu-btn{display:flex !important;}
+.sub-nav{display:none !important;}
+
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<header>
+  <a href="index.html" class="logo"><div class="logo-mark"><span>R7</span></div>RSS7 <em>AI</em> Works</a>
+  <nav class="nav-links">
+    <a href="index.html" class="nav-link">TOP</a>
+    <a href="services.html" class="nav-link">SERVICES</a>
+    <a href="blog.html" class="nav-link active">BLOG</a>
+    <a href="about.html" class="nav-link">ABOUT</a>
+    <a href="contact.html" class="nav-link">CONTACT</a>
+    <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
+    <a href="https://kiseki.rss7.net" class="nav-link">軌跡</a>
+  </nav>
+  <button class="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html" class="nav-link">TOP</a>
+  <a href="services.html" class="nav-link">SERVICES</a>
+  <a href="blog.html" class="nav-link active">BLOG</a>
+  <a href="about.html" class="nav-link">ABOUT</a>
+  <a href="contact.html" class="nav-link">CONTACT</a>
+  <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
+  <a href="https://kiseki.rss7.net" class="nav-link">映像工房 軌跡</a>
+</div>
+
+<div class="page-hero">
+  <span class="ph-label">LATEST POSTS</span>
+  <h1 class="ph-title">BLOG</h1>
+</div>
+
+<div class="cat-tabs">
+  <button class="cat-tab active" onclick="filterCat('all',this)">ALL</button>
+  <button class="cat-tab" onclick="filterCat('AI',this)">AI</button>
+  <button class="cat-tab" onclick="filterCat('WEB',this)">WEB</button>
+  <button class="cat-tab" onclick="filterCat('VIDEO',this)">VIDEO</button>
+  <button class="cat-tab" onclick="filterCat('SNS',this)">SNS</button>
+</div>
+
+<!-- タグクラウド -->
+<div class="tag-cloud" id="tagCloud"></div>
+
+<!-- 絞り込みバナー -->
+<div class="filter-bar" id="filterBar">
+  <p id="filterLabel"></p>
+  <button class="filter-clear" onclick="clearFilter()">✕ 絞り込みを解除</button>
+</div>
+
+<div class="blog-grid" id="blogGrid"></div>
+
+<!-- ブランドリンク -->
+<div class="brand-links">
+  <a href="https://bitframe.rss7.net" class="brand-link-card fi">
+    <div><h3>BitFrame</h3><p>AI動画CM制作サービス</p></div>
+    <span>↗</span>
+  </a>
+  <a href="https://kiseki.rss7.net" class="brand-link-card fi">
+    <div><h3>映像工房 軌跡</h3><p>自分史・終活ビデオ制作</p></div>
+    <span>↗</span>
+  </a>
+</div>
+
+<!-- モーダル -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div id="modalImg"></div>
+    <div class="modal-content">
+      <div class="modal-meta">
+        <span class="modal-cat" id="modalCat"></span>
+        <span class="modal-date" id="modalDate"></span>
+      </div>
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+</div>
+
+<footer><p>© 2026 RSS7 AI Works All Rights Reserved.</p></footer>
+
+<script>
+// サーバーから記事を読み込む
+const API_URL = 'api/articles.php';
+let articles = [];
+let currentCat = 'all';
+let currentTag = '';
+
+async function loadArticles(){
+  try {
+    const res = await fetch(API_URL + '?status=published');
+    const data = await res.json();
+    if(data.success){
+      articles = data.articles;
+      renderArticles(currentCat, currentTag);
+      renderTagCloud();
+    }
+  } catch(e) {
+    // フォールバック：サンプルデータ
+    articles = [
+  {
+    id:'1',
+    cat:'AI',
+    date:'2026.04.18',
+    title:'2026年のAI動画制作事情：もうCMは自分で作れる時代',
+    excerpt:'AIによる動画生成技術は急速に進化しています。今やテキストを入力するだけで、プロ品質のCM動画が完成する時代。',
+    body:'<p>AIによる動画生成技術は急速に進化しています。今やテキストを入力するだけで、プロ品質のCM動画が完成する時代。中小企業やフリーランスでも、低コストで高品質な映像制作が可能になりました。</p>',
+    emoji:'🎬', tag:'AI動画'
+  },
+  {
+    id:'2',
+    cat:'WEB',
+    date:'2026.04.17',
+    title:'中小企業のホームページ、まだWordPressで作りますか？',
+    excerpt:'WordPressは依然として人気のCMSですが、2026年現在、より効率的な選択肢が増えています。',
+    body:'<p>WordPressは依然として人気のCMSですが、2026年現在、より効率的な選択肢が増えています。目的に合わせた最適なプラットフォーム選びが重要です。</p>',
+    emoji:'🌐', tag:'WordPress'
+  },
+  {
+    id:'3',
+    cat:'AI',
+    date:'2026.04.16',
+    title:'ChatGPTを業務に使い始めて1年。変わったこと・変わらなかったこと',
+    excerpt:'AIアシスタントを日常業務に取り入れてから1年が経ちました。実際に何が変わったのかお伝えします。',
+    body:'<p>AIアシスタントを日常業務に取り入れてから1年が経ちました。文章作成・アイデア出し・コード生成など、多くの作業でAIが大きな助けになっています。</p>',
+    emoji:'🤖', tag:'ChatGPT'
+  },
+  {
+    id:'4',
+    cat:'VIDEO',
+    date:'2026.04.15',
+    title:'終活ビデオを作って気づいたこと。「今」を記録することの大切さ',
+    excerpt:'映像工房 軌跡での制作事例をご紹介します。「今、元気なうちに作りたかった」という言葉が忘れられません。',
+    body:'<p>映像工房 軌跡では、思い出の写真・映像とエピソードをオリジナル楽曲付きの映像作品に仕上げています。</p>',
+    emoji:'📽️', tag:'終活ビデオ'
+  },
+  {
+    id:'5',
+    cat:'SNS',
+    date:'2026.04.14',
+    title:'Instagram運用で失敗しがちな3つのパターンと対策',
+    excerpt:'「投稿しているのに全然フォロワーが増えない」というお悩みをよく聞きます。今回はその典型例と改善策をご紹介します。',
+    body:'<p>Instagram運用でよく見られる失敗パターンがあります。投稿頻度・画像品質・コメント返信の3点が特に重要です。</p>',
+    emoji:'📊', tag:'Instagram'
+  },
+  {
+    id:'6',
+    cat:'AI',
+    date:'2026.04.12',
+    title:'AI楽曲制作ツールSuno、実際に使ってみた正直レビュー',
+    excerpt:'AI音楽生成ツール「Suno」を使って実際にオリジナル楽曲を制作してみました。クオリティ・使いやすさのリアルなレビューです。',
+    body:'<p>AI音楽生成ツール「Suno」を実際に使って、映像工房 軌跡のBGM制作に活用してみました。テキストで曲のイメージを入力するだけで数十秒後には完成した楽曲が生成されます。</p>',
+    emoji:'🎵', tag:'AI音楽'
+  },
+];
+    renderArticles(currentCat, currentTag);
+    renderTagCloud();
+  }
+}
+
+// タグクラウド描画
+function renderTagCloud(){
+  const tags = [...new Set(articles.map(a=>a.tag).filter(t=>t&&t.trim()))];
+  if(!tags.length){ document.getElementById('tagCloud').style.display='none'; return; }
+  document.getElementById('tagCloud').innerHTML =
+    `<span class="tag-cloud-label">TAG:</span>` +
+    tags.map(t=>`<button class="tag-pill${currentTag===t?' active':''}" onclick="filterTag('${t}')"># ${t}</button>`).join('');
+}
+
+// タグ絞り込み
+function filterTag(tag){
+  if(currentTag === tag){
+    clearFilter();
+    return;
+  }
+  currentTag = tag;
+  currentCat = 'all';
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.cat-tab')[0].classList.add('active');
+  document.getElementById('filterBar').classList.add('show');
+  document.getElementById('filterLabel').textContent = `タグ「${tag}」で絞り込み中`;
+  renderArticles(currentCat, currentTag);
+  renderTagCloud();
+}
+
+// 絞り込み解除
+function clearFilter(){
+  currentTag = '';
+  document.getElementById('filterBar').classList.remove('show');
+  renderArticles(currentCat, currentTag);
+  renderTagCloud();
+}
+
+function renderArticles(cat, tag){
+  const grid = document.getElementById('blogGrid');
+  let filtered = cat==='all' ? articles : articles.filter(a=>a.cat===cat);
+  if(tag) filtered = filtered.filter(a=>a.tag===tag);
+
+  if(!filtered.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--gray);padding:60px;font-size:0.85rem;">記事が見つかりませんでした</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(a=>`
+    <div class="blog-card fi" onclick="openModal('${a.id}')">
+      <div class="blog-thumb">
+        ${a.image
+          ? `<img src="${a.image}" alt="${a.title}" loading="lazy">`
+          : `<div class="blog-thumb-placeholder">${a.emoji||'📝'}</div>`}
+        <span class="blog-cat">${a.cat}</span>
+      </div>
+      <div class="blog-body">
+        <span class="blog-date">${a.date}</span>
+        <h3 class="blog-title">${a.title}</h3>
+        <p class="blog-excerpt">${a.excerpt||''}</p>
+        <div class="blog-footer">
+          ${a.tag ? `<button class="blog-tag" onclick="event.stopPropagation();filterTag('${a.tag}')"># ${a.tag}</button>` : '<span></span>'}
+          <span class="blog-arrow">→</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  setTimeout(()=>{
+    document.querySelectorAll('.fi').forEach(el=>{ obs.observe(el); });
+  },50);
+}
+
+function filterCat(cat, btn){
+  currentCat = cat;
+  currentTag = '';
+  document.getElementById('filterBar').classList.remove('show');
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderArticles(cat, '');
+  renderTagCloud();
+}
+
+function openModal(id){
+  const a = articles.find(x=>String(x.id)===String(id));
+  if(!a) return;
+  document.getElementById('modalImg').innerHTML = a.image
+    ? `<img class="modal-img" src="${a.image}" alt="${a.title}">`
+    : `<div class="modal-img-placeholder">${a.emoji||'📝'}</div>`;
+  document.getElementById('modalCat').textContent = a.cat;
+  document.getElementById('modalDate').textContent = a.date;
+  document.getElementById('modalTitle').textContent = a.title;
+  document.getElementById('modalBody').innerHTML = a.body||'';
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(e){
+  if(e.target===document.getElementById('modalOverlay')){
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow='';
+  }
+}
+
+function closeModalBtn(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
+
+const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('v'),i*80);});},{threshold:0.05});
+
+// 初期表示
+loadArticles();
+document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+
+</script>
+<!-- LINE相談フローティングボタン -->
+<a href="https://lin.ee/RjoCIMX" target="_blank" rel="noopener" class="line-float" aria-label="LINEで相談">
+  <span class="line-float-label">LINEで無料相談</span>
+  <svg viewBox="0 0 24 24"><path d="M19.365 9.89c.50 0 .906.408.906.91 0 .5-.406.907-.906.907H17.59v1.135h1.775c.5 0 .906.41.906.91 0 .502-.406.91-.906.91H16.68c-.5 0-.907-.408-.907-.91V8.75c0-.5.407-.91.907-.91h2.686c.5 0 .906.41.906.91 0 .503-.406.91-.906.91H17.59v1.136h1.775zm-4.123 3.78c0 .392-.252.738-.625.858-.093.03-.19.045-.285.045-.297 0-.574-.148-.738-.39l-2.753-3.745v3.232c0 .5-.406.91-.906.91-.5 0-.905-.41-.905-.91V8.75c0-.392.25-.738.622-.858.093-.03.19-.044.287-.044.297 0 .575.148.74.39l2.752 3.746V8.75c0-.5.405-.91.905-.91.5 0 .907.41.907.91v4.92zm-6.74 0c0 .5-.407.91-.907.91-.5 0-.905-.41-.905-.91V8.75c0-.5.405-.91.905-.91s.906.41.906.91v4.92zm-2.43.91H3.388c-.498 0-.905-.41-.905-.91V8.75c0-.5.407-.91.905-.91.5 0 .906.41.906.91v4.01h1.777c.5 0 .906.41.906.91 0 .503-.404.91-.905.91M12 0C5.373 0 0 4.373 0 9.765c0 4.832 4.258 8.88 10.01 9.646.39.084.92.258 1.053.592.12.303.08.78.04 1.087l-.17 1.023c-.053.303-.24 1.186 1.04.645 1.28-.54 6.887-4.055 9.396-6.943C23.115 13.91 24 11.94 24 9.765 24 4.374 18.627 0 12 0"/></svg>
+</a>
+
+</body>
+</html>

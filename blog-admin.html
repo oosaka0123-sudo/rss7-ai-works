@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ブログ管理 | RSS7 AI Works</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020408;--bg2:#060d14;--card:#0a1520;
+  --blue:#00aaff;--cyan:#00ffee;--white:#e8f4ff;--gray:#5a7a9a;
+  --border:rgba(0,170,255,0.12);--red:#ff4466;--green:#00ff88;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-serif;min-height:100vh;}
+
+/* ログイン */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden;}
+.login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(0,100,200,0.07) 0%,transparent 70%);}
+.login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,170,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,170,255,0.03) 1px,transparent 1px);background-size:40px 40px;}
+.login-box{position:relative;z-index:1;width:100%;max-width:380px;background:var(--bg2);border:1px solid var(--border);padding:50px 40px;text-align:center;}
+@media(max-width:480px){.login-box{padding:35px 20px;margin:20px;}}
+.login-logo{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:0.1em;color:var(--white);margin-bottom:5px;}
+.login-logo em{color:var(--blue);font-style:normal;}
+.login-sub{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.3em;color:var(--gray);margin-bottom:35px;}
+.login-field{margin-bottom:16px;text-align:left;}
+.login-label{display:block;font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;color:var(--blue);margin-bottom:8px;}
+.login-input{width:100%;background:rgba(0,170,255,0.04);border:1px solid var(--border);color:var(--white);padding:13px 15px;font-size:0.88rem;font-family:'Noto Sans JP',sans-serif;outline:none;transition:border-color 0.3s;}
+.login-input:focus{border-color:var(--blue);}
+.login-btn{width:100%;padding:14px;margin-top:8px;background:var(--blue);color:#020408;font-family:'Orbitron',monospace;font-size:0.78rem;font-weight:700;letter-spacing:0.15em;border:none;cursor:pointer;transition:all 0.3s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));}
+.login-btn:hover{background:var(--cyan);}
+.login-error{font-size:0.75rem;color:var(--red);margin-top:12px;display:none;font-family:'Share Tech Mono',monospace;}
+
+/* 管理画面 */
+.admin-screen{display:none;}
+.admin-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 25px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.admin-logo{font-family:'Orbitron',monospace;font-size:0.9rem;font-weight:900;color:var(--white);}
+.admin-logo em{color:var(--blue);font-style:normal;}
+.admin-logo span{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--gray);margin-left:10px;}
+.header-right{display:flex;align-items:center;gap:12px;}
+.user-badge{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--gray);}
+.logout-btn{padding:6px 14px;border:1px solid var(--border);color:var(--gray);font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;cursor:pointer;background:none;transition:all 0.3s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.admin-body{max-width:1000px;margin:0 auto;padding:25px 20px;}
+
+/* 統計 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr);}}
+.stat-box{background:var(--bg2);border:1px solid var(--border);padding:16px;text-align:center;}
+.stat-num{font-family:'Orbitron',monospace;font-size:1.8rem;color:var(--blue);display:block;line-height:1;}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--gray);letter-spacing:0.15em;margin-top:5px;display:block;}
+
+/* タブ */
+.tabs{display:flex;gap:3px;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.tab-btn{padding:10px 18px;background:none;border:none;font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--gray);cursor:pointer;letter-spacing:0.1em;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.3s;}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* 記事一覧 */
+.article-item{background:var(--bg2);border:1px solid var(--border);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:border-color 0.3s;}
+.article-item:hover{border-color:rgba(0,170,255,0.3);}
+.article-thumb{width:70px;height:50px;flex-shrink:0;background:var(--card);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.article-thumb img{width:100%;height:100%;object-fit:cover;}
+.article-info{flex:1;min-width:0;}
+.article-meta{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--gray);margin-bottom:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.article-title{font-size:0.88rem;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cat-badge{font-size:0.58rem;padding:2px 7px;background:rgba(0,170,255,0.15);color:var(--blue);font-family:'Share Tech Mono',monospace;}
+.status-pub{color:var(--green);}
+.status-draft{color:var(--gray);}
+.article-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-edit{padding:5px 12px;background:var(--blue);color:#020408;border:none;font-size:0.65rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.3s;}
+.btn-edit:hover{background:var(--cyan);}
+.btn-del{padding:5px 12px;background:none;color:var(--red);border:1px solid var(--red);font-size:0.65rem;cursor:pointer;transition:all 0.3s;}
+.btn-del:hover{background:var(--red);color:var(--white);}
+
+/* フォーム */
+.form-group{margin-bottom:18px;}
+.form-label{display:block;font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:0.2em;color:var(--blue);margin-bottom:8px;}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(0,170,255,0.04);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-size:0.85rem;font-family:'Noto Sans JP',sans-serif;outline:none;transition:border-color 0.3s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);}
+.form-textarea{height:200px;resize:vertical;line-height:1.7;}
+.form-select option{background:var(--bg2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+
+/* 画像アップロード */
+.upload-area{border:2px dashed rgba(0,170,255,0.2);padding:25px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;background:rgba(0,170,255,0.02);}
+.upload-area:hover{border-color:var(--blue);background:rgba(0,170,255,0.05);}
+.upload-area input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:2rem;margin-bottom:8px;display:block;}
+.upload-area p{font-size:0.78rem;color:var(--gray);}
+.upload-progress{margin-top:10px;display:none;}
+.progress-bar{height:4px;background:var(--border);position:relative;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(to right,var(--blue),var(--cyan));width:0%;transition:width 0.3s;}
+.preview-wrap{margin-top:12px;display:none;}
+.preview-wrap img{max-width:100%;max-height:180px;object-fit:cover;border:1px solid var(--border);}
+.preview-name{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--blue);margin-top:5px;display:block;}
+.remove-img{display:inline-block;font-size:0.68rem;color:var(--red);cursor:pointer;margin-top:6px;background:none;border:none;padding:0;}
+
+/* 画像グリッド */
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.img-item{position:relative;aspect-ratio:1;background:var(--card);border:1px solid var(--border);overflow:hidden;cursor:pointer;}
+.img-item img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s;}
+.img-item:hover img{transform:scale(1.05);}
+.img-overlay{position:absolute;inset:0;background:rgba(0,10,30,0.75);display:flex;align-items:center;justify-content:center;gap:6px;opacity:0;transition:opacity 0.3s;}
+.img-item:hover .img-overlay{opacity:1;}
+.img-btn{font-size:0.6rem;padding:4px 8px;border:1px solid var(--white);color:var(--white);background:none;cursor:pointer;transition:all 0.2s;}
+.img-btn:hover{background:var(--white);color:#020408;}
+.img-name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,10,20,0.75);padding:3px 5px;font-size:0.55rem;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.btn-save{padding:11px 28px;background:var(--blue);color:#020408;font-family:'Orbitron',monospace;font-size:0.75rem;font-weight:700;letter-spacing:0.12em;border:none;cursor:pointer;transition:all 0.3s;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));}
+.btn-save:hover{background:var(--cyan);}
+.btn-cancel{padding:11px 20px;background:none;color:var(--gray);border:1px solid var(--border);font-size:0.75rem;cursor:pointer;transition:all 0.3s;font-family:'Share Tech Mono',monospace;}
+.btn-cancel:hover{border-color:var(--blue);color:var(--blue);}
+.new-btn{padding:8px 18px;background:var(--blue);color:#020408;font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;border:none;cursor:pointer;transition:all 0.3s;}
+.new-btn:hover{background:var(--cyan);}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-header h2{font-family:'Orbitron',monospace;font-size:0.9rem;letter-spacing:0.1em;color:var(--white);}
+.empty-msg{text-align:center;color:var(--gray);padding:40px;font-size:0.85rem;}
+.loading{text-align:center;color:var(--blue);padding:30px;font-size:0.82rem;}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--blue);color:var(--white);padding:12px 20px;font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:9999;}
+.toast.show{transform:translateY(0);opacity:1;}
+.scanline{position:fixed;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--blue),transparent);opacity:0.15;animation:scan 6s linear infinite;pointer-events:none;z-index:9998;}
+@keyframes scan{0%{top:0;}100%{top:100vh;}}
+
+/* リッチテキストツールバー */
+.editor-toolbar{display:flex;gap:4px;flex-wrap:wrap;padding:8px;background:var(--bg);border:1px solid var(--border);border-bottom:none;}
+.toolbar-btn{padding:5px 10px;background:none;border:1px solid var(--border);color:var(--gray);font-size:0.7rem;cursor:pointer;transition:all 0.2s;font-family:'Share Tech Mono',monospace;}
+.toolbar-btn:hover{border-color:var(--blue);color:var(--blue);}
+.editor-area{width:100%;min-height:200px;background:rgba(0,170,255,0.04);border:1px solid var(--border);color:var(--white);padding:14px;font-size:0.88rem;font-family:'Noto Sans JP',sans-serif;outline:none;resize:vertical;}
+.editor-area:focus{border-color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<!-- ログイン -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-grid"></div>
+  <div class="login-box">
+    <div class="login-logo">RSS7 <em>AI</em> Works</div>
+    <div class="login-sub">BLOG ADMIN PANEL</div>
+    <div class="login-field">
+      <label class="login-label">USERNAME</label>
+      <input type="text" class="login-input" id="loginUser" placeholder="admin" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <div class="login-field">
+      <label class="login-label">PASSWORD</label>
+      <input type="password" class="login-input" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="login-btn" onclick="login()">ログイン</button>
+    <p class="login-error" id="loginError">ユーザー名またはパスワードが違います</p>
+  </div>
+</div>
+
+<!-- 管理画面 -->
+<div class="admin-screen" id="adminScreen">
+  <div class="admin-header">
+    <div class="admin-logo">RSS7 <em>AI</em> Works <span>BLOG ADMIN</span></div>
+    <div class="header-right">
+      <span class="user-badge" id="userBadge"></span>
+      <button class="logout-btn" onclick="logout()">ログアウト</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="stats">
+      <div class="stat-box"><span class="stat-num" id="statTotal">-</span><span class="stat-label">記事数</span></div>
+      <div class="stat-box"><span class="stat-num" id="statPub">-</span><span class="stat-label">公開中</span></div>
+      <div class="stat-box"><span class="stat-num" id="statDraft">-</span><span class="stat-label">下書き</span></div>
+      <div class="stat-box"><span class="stat-num" id="statImg">-</span><span class="stat-label">画像数</span></div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('list',this)">記事一覧</button>
+      <button class="tab-btn" onclick="showTab('edit',this)">新規作成</button>
+      <button class="tab-btn" onclick="showTab('images',this)">🖼 画像フォルダ</button>
+    </div>
+
+    <!-- 記事一覧 -->
+    <div class="tab-content active" id="tab-list">
+      <div class="section-header">
+        <h2>記事一覧</h2>
+        <button class="new-btn" onclick="newArticle()">＋ 新規作成</button>
+      </div>
+      <div id="articleList"><div class="loading">読み込み中...</div></div>
+    </div>
+
+    <!-- 編集 -->
+    <div class="tab-content" id="tab-edit">
+      <div class="section-header"><h2 id="editHeading">新規作成</h2></div>
+      <input type="hidden" id="editId">
+      <input type="hidden" id="editDate">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">カテゴリ</label>
+          <select class="form-select" id="editCat">
+            <option value="AI">AI</option>
+            <option value="WEB">WEB</option>
+            <option value="VIDEO">VIDEO</option>
+            <option value="SNS">SNS</option>
+            <option value="OTHER">OTHER</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ステータス</label>
+          <select class="form-select" id="editStatus">
+            <option value="published">公開</option>
+            <option value="draft">下書き</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">タイトル</label>
+        <input type="text" class="form-input" id="editTitle" placeholder="記事タイトルを入力">
+      </div>
+
+      <!-- アイキャッチ画像 -->
+      <div class="form-group">
+        <label class="form-label">アイキャッチ画像（サーバーに保存）</label>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="imageFile" accept="image/*" onchange="uploadImage(event)">
+          <span class="upload-icon">📁</span>
+          <p>タップして画像を選択・アップロード<br><small style="color:var(--gray);font-size:0.7rem;">JPG・PNG・WebP 最大5MB</small></p>
+        </div>
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <p style="font-size:0.7rem;color:var(--blue);margin-top:5px;">アップロード中...</p>
+        </div>
+        <div class="preview-wrap" id="previewWrap">
+          <img id="previewImg" src="" alt="">
+          <span class="preview-name" id="previewName"></span>
+          <button class="remove-img" onclick="removeImage()">✕ 画像を削除</button>
+        </div>
+        <input type="hidden" id="editImage">
+      </div>
+
+      <!-- 本文エディタ -->
+      <div class="form-group">
+        <label class="form-label">本文</label>
+        <div class="editor-toolbar">
+          <button class="toolbar-btn" onclick="insertTag('b')"><b>B</b></button>
+          <button class="toolbar-btn" onclick="insertTag('i')"><i>I</i></button>
+          <button class="toolbar-btn" onclick="insertH2()">H2</button>
+          <button class="toolbar-btn" onclick="insertH3()">H3</button>
+          <button class="toolbar-btn" onclick="insertP()">¶</button>
+          <button class="toolbar-btn" onclick="insertLink()">🔗</button>
+          <button class="toolbar-btn" onclick="insertList()">≡</button>
+        </div>
+        <textarea class="editor-area" id="editBody" placeholder="記事の内容をHTMLで入力できます。&#10;例：&lt;p&gt;本文&lt;/p&gt;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">タグ</label>
+        <input type="text" class="form-input" id="editTag" placeholder="例：AI動画、WordPress">
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="cancelEdit()">キャンセル</button>
+        <button class="btn-save" onclick="saveArticle()">保 存</button>
+      </div>
+    </div>
+
+    <!-- 画像フォルダ -->
+    <div class="tab-content" id="tab-images">
+      <div class="section-header"><h2>画像フォルダ（サーバー保存）</h2></div>
+      <div class="upload-area" style="margin-bottom:18px;">
+        <input type="file" accept="image/*" multiple onchange="uploadMultiple(event)">
+        <span class="upload-icon">📂</span>
+        <p>画像を追加（複数選択可）</p>
+      </div>
+      <div class="img-grid" id="imageGrid"><div class="loading">読み込み中...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = {
+  auth:     'api/auth.php',
+  articles: 'api/articles.php',
+  upload:   'api/upload.php',
+};
+
+let currentUser = null;
+let articles = [];
+let images = [];
+let currentImageUrl = '';
+
+// ===== ログイン =====
+async function login(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  try {
+    const res = await fetch(API.auth, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'login', username:u, password:p})
+    });
+    const data = await res.json();
+    if(data.success){
+      currentUser = data.user;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminScreen').style.display = 'block';
+      document.getElementById('userBadge').textContent = data.user.name + ' さん';
+      document.getElementById('loginError').style.display = 'none';
+      await loadArticles();
+      await loadImages();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('loginError').textContent = data.message;
+    }
+  } catch(e) {
+    // 認証APIに接続できない場合はログインを許可しない。
+    currentUser = null;
+    document.getElementById('adminScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginError').textContent = '認証サーバーに接続できません。管理者にお問い合わせください。';
+  }
+}
+
+function logout(){
+  currentUser = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminScreen').style.display = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// ===== タブ =====
+function showTab(name, btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='images') loadImages();
+}
+
+// ===== 記事読み込み =====
+async function loadArticles(){
+  try {
+    const res = await fetch(API.articles + '?status=all');
+    const data = await res.json();
+    if(data.success){ articles = data.articles; renderArticleList(); updateStats(articles, images); }
+  } catch(e) { document.getElementById('articleList').innerHTML = '<div class="empty-msg">サーバーに接続できません</div>'; }
+}
+
+function renderArticleList(){
+  const el = document.getElementById('articleList');
+  if(!articles.length){ el.innerHTML='<div class="empty-msg">記事がありません</div>'; return; }
+  el.innerHTML = articles.map(a=>`
+    <div class="article-item">
+      <div class="article-thumb">
+        ${a.image ? `<img src="${a.image}" alt="">` : (a.emoji||'📝')}
+      </div>
+      <div class="article-info">
+        <div class="article-meta">
+          <span class="cat-badge">${a.cat}</span>
+          <span>${a.date}</span>
+          <span class="${a.status==='published'?'status-pub':'status-draft'}">${a.status==='published'?'●公開':'○下書き'}</span>
+        </div>
+        <div class="article-title">${a.title}</div>
+      </div>
+      <div class="article-actions">
+        <button class="btn-edit" onclick="editArticle('${a.id}')">編集</button>
+        <button class="btn-del" onclick="deleteArticle('${a.id}')">削除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStats(arts, imgs){
+  document.getElementById('statTotal').textContent = arts.length;
+  document.getElementById('statPub').textContent = arts.filter(a=>a.status==='published').length;
+  document.getElementById('statDraft').textContent = arts.filter(a=>a.status==='draft').length;
+  document.getElementById('statImg').textContent = imgs.length;
+}
+
+// ===== 記事操作 =====
+function newArticle(){
+  document.getElementById('editId').value = '';
+  document.getElementById('editDate').value = '';
+  document.getElementById('editTitle').value = '';
+  document.getElementById('editBody').value = '';
+  document.getElementById('editTag').value = '';
+  document.getElementById('editCat').value = 'AI';
+  document.getElementById('editStatus').value = 'published';
+  document.getElementById('editImage').value = '';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('previewImg').src = '';
+  currentImageUrl = '';
+  document.getElementById('editHeading').textContent = '新規作成';
+  showTab('edit', document.querySelectorAll('.tab-btn')[1]);
+}
+
+function editArticle(id){
+  const a = articles.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('editId').value = a.id;
+  document.getElementById('editDate').value = a.date;
+  document.getElementById('editTitle').value = a.title;
+  document.getElementById('editBody').value = a.body || '';
+  document.getElementById('editTag').value = a.tag || '';
+  document.getElementById('editCat').value = a.cat;
+  document.getElementById('editStatus').value = a.status || 'published';
+  document.getElementById('editImage').value = a.image || '';
+  currentImageUrl = a.image || '';
+  if(a.image){
+    document.getElementById('previewImg').src = a.image;
+    document.getElementById('previewName').textContent = a.image.split('/').pop();
+    document.getElementById('previewWrap').style.display = 'block';
+  } else {
+    document.getElementById('previewWrap').style.display = 'none';
+  }
+  document.getElementById('editHeading').textContent = '記事を編集';
+  showTab('edit', document.querySelectorAll('.tab-btn')[1]);
+}
+
+async function saveArticle(){
+  const title = document.getElementById('editTitle').value.trim();
+  const body  = document.getElementById('editBody').value.trim();
+  if(!title || !body){ showToast('タイトルと本文を入力してください'); return; }
+
+  const article = {
+    action: 'save',
+    id:     document.getElementById('editId').value || '',
+    title, body,
+    cat:    document.getElementById('editCat').value,
+    status: document.getElementById('editStatus').value,
+    tag:    document.getElementById('editTag').value,
+    image:  currentImageUrl,
+    date:   document.getElementById('editDate').value || '',
+  };
+
+  try {
+    const res = await fetch(API.articles, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(article)
+    });
+    const data = await res.json();
+    showToast(data.message);
+    await loadArticles();
+    cancelEdit();
+  } catch(e) { showToast('保存に失敗しました。サーバーを確認してください。'); }
+}
+
+async function deleteArticle(id){
+  if(!confirm('削除しますか？')) return;
+  try {
+    const res = await fetch(API.articles, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'delete', id})
+    });
+    const data = await res.json();
+    showToast(data.message);
+    await loadArticles();
+  } catch(e) { showToast('削除に失敗しました'); }
+}
+
+function cancelEdit(){
+  showTab('list', document.querySelectorAll('.tab-btn')[0]);
+}
+
+// ===== 画像アップロード（サーバー） =====
+async function uploadImage(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const formData = new FormData();
+  formData.append('image', file);
+
+  document.getElementById('uploadProgress').style.display = 'block';
+  // プログレス演出
+  let w = 0;
+  const timer = setInterval(()=>{ w=Math.min(w+10,90); document.getElementById('progressFill').style.width=w+'%'; }, 100);
+
+  try {
+    const res = await fetch(API.upload, {method:'POST', body: formData});
+    const data = await res.json();
+    clearInterval(timer);
+    document.getElementById('progressFill').style.width = '100%';
+    setTimeout(()=>{ document.getElementById('uploadProgress').style.display='none'; }, 500);
+
+    if(data.success){
+      currentImageUrl = data.url;
+      document.getElementById('editImage').value = data.url;
+      document.getElementById('previewImg').src = data.url;
+      document.getElementById('previewName').textContent = data.name;
+      document.getElementById('previewWrap').style.display = 'block';
+      showToast('画像をアップロードしました！');
+      loadImages();
+    } else {
+      showToast('エラー：' + data.message);
+    }
+  } catch(e) {
+    clearInterval(timer);
+    document.getElementById('uploadProgress').style.display='none';
+    showToast('アップロード失敗。サーバーを確認してください。');
+  }
+}
+
+function removeImage(){
+  currentImageUrl = '';
+  document.getElementById('editImage').value = '';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('imageFile').value = '';
+}
+
+async function uploadMultiple(e){
+  const files = Array.from(e.target.files);
+  showToast(files.length + '枚アップロード中...');
+  for(const file of files){
+    const fd = new FormData();
+    fd.append('image', file);
+    try { await fetch(API.upload, {method:'POST', body:fd}); } catch(err){}
+  }
+  await loadImages();
+  showToast('アップロード完了！');
+}
+
+// ===== 画像一覧 =====
+async function loadImages(){
+  try {
+    const res = await fetch(API.upload);
+    const data = await res.json();
+    if(data.success){
+      images = data.images;
+      renderImageGrid();
+      updateStats(articles, images);
+    }
+  } catch(e) {
+    document.getElementById('imageGrid').innerHTML = '<div class="empty-msg">サーバーに接続できません</div>';
+  }
+}
+
+function renderImageGrid(){
+  const grid = document.getElementById('imageGrid');
+  if(!images.length){ grid.innerHTML='<div class="empty-msg">画像がありません</div>'; return; }
+  grid.innerHTML = images.map(img=>`
+    <div class="img-item">
+      <img src="${img.url}" alt="${img.name}" loading="lazy">
+      <div class="img-overlay">
+        <button class="img-btn" onclick="selectImage('${img.url}','${img.name}')">使用</button>
+        <button class="img-btn" onclick="deleteServerImage('${img.name}')">削除</button>
+      </div>
+      <div class="img-name">${img.name}</div>
+    </div>
+  `).join('');
+}
+
+function selectImage(url, name){
+  currentImageUrl = url;
+  document.getElementById('editImage').value = url;
+  document.getElementById('previewImg').src = url;
+  document.getElementById('previewName').textContent = name;
+  document.getElementById('previewWrap').style.display = 'block';
+  showTab('edit', document.querySelectorAll('.tab-btn')[1]);
+  showToast('画像を選択しました');
+}
+
+async function deleteServerImage(name){
+  if(!confirm('削除しますか？')) return;
+  try {
+    const res = await fetch(API.upload + '?action=delete', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name})
+    });
+    const data = await res.json();
+    showToast(data.message);
+    await loadImages();
+  } catch(e) { showToast('削除に失敗しました'); }
+}
+
+// ===== エディタ補助 =====
+function insertTag(tag){
+  const ta = document.getElementById('editBody');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.substring(s, e);
+  ta.value = ta.value.substring(0,s) + `<${tag}>${sel}</${tag}>` + ta.value.substring(e);
+  ta.focus();
+}
+function insertH2(){ const ta=document.getElementById('editBody'); ta.value+='\n<h2></h2>\n'; ta.focus(); }
+function insertH3(){ const ta=document.getElementById('editBody'); ta.value+='\n<h3></h3>\n'; ta.focus(); }
+function insertP(){ const ta=document.getElementById('editBody'); ta.value+='\n<p></p>\n'; ta.focus(); }
+function insertLink(){ const ta=document.getElementById('editBody'); ta.value+='\n<a href="URL">リンクテキスト</a>\n'; ta.focus(); }
+function insertList(){ const ta=document.getElementById('editBody'); ta.value+='\n<ul>\n  <li></li>\n  <li></li>\n</ul>\n'; ta.focus(); }
+
+// ===== トースト =====
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
