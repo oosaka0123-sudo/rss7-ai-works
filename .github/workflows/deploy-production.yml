@@ -1,0 +1,76 @@
+name: Deploy production
+
+on:
+  workflow_run:
+    workflows: ["Site quality"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rss7-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      vars.LOLIPOP_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+      DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+      DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+      DEPLOY_DIR: ${{ vars.LOLIPOP_DEPLOY_DIR }}
+    steps:
+      - name: Check deployment configuration
+        id: config
+        shell: bash
+        run: |
+          set +x
+          ready=true
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || ready=false
+          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || ready=false
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || ready=false
+          [[ "$DEPLOY_DIR" =~ ^/[A-Za-z0-9._/-]+$ && "$DEPLOY_DIR" != "/" ]] || ready=false
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+          if [[ "$ready" != true ]]; then
+            echo "Deployment skipped: production settings are missing or invalid."
+          fi
+
+      - name: Check out validated revision
+        if: steps.config.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Install lftp
+        if: steps.config.outputs.ready == 'true'
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload validated site
+        if: steps.config.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mirror --reverse --verbose=1 --parallel=2 --no-perms \
+            --exclude-rx='(^|/)api/config[.]local[.]php$|(^|/)data/articles[.]json$|(^|/)images/blog(/|$)|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md)$|[.]zip$' \
+            ./ "$DEPLOY_DIR"
+          bye
+          LFTP
