@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import struct
 import sys
 import xml.etree.ElementTree as ET
@@ -14,7 +15,7 @@ from urllib.parse import unquote, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 ERRORS: list[str] = []
 WARNINGS: list[str] = []
-RUNTIME_ENDPOINTS = {"api/articles.php", "api/auth.php", "api/upload.php"}
+RUNTIME_ENDPOINTS: set[str] = set()
 MAIN_PAGES = ["index.html", "services.html", "about.html", "contact.html", "blog.html", "privacy.html"]
 
 
@@ -80,6 +81,8 @@ def check_json() -> None:
         ids.add(article_id)
         if article.get("status") not in {"published", "draft"}:
             error(f"data/articles.json: id {article_id} のstatusが不正です")
+        if article.get("status") == "draft":
+            error(f"data/articles.json: 公開フォールバックに下書きがあります (id {article_id})")
 
 
 def check_sitemap() -> None:
@@ -144,13 +147,17 @@ def check_html() -> None:
 
 def check_files() -> None:
     forbidden_names = {"auto_post.php", "upload.php", "php.ini", "rss7-complete.zip"}
+    allowed_exception_paths = {"api/upload.php"}
     forbidden_suffixes = {".zip", ".bak", ".log"}
     for path in ROOT.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
             continue
         relative = path.relative_to(ROOT)
-        if path.name in forbidden_names or path.suffix.lower() in forbidden_suffixes:
+        if ((path.name in forbidden_names and relative.as_posix() not in allowed_exception_paths)
+                or path.suffix.lower() in forbidden_suffixes):
             error(f"公開禁止ファイル: {relative}")
+        if path.name == "config.local.php":
+            error(f"秘密設定ファイルが登録されています: {relative}")
         if path.stat().st_size > 1_000_000:
             error(f"1MBを超えるファイル: {relative}")
     og_image = ROOT / "images/og-image.jpg"
@@ -161,11 +168,25 @@ def check_files() -> None:
         error(f"images/og-image.jpg: {exc}")
 
 
+def check_secrets() -> None:
+    patterns = [
+        re.compile(r"define\(\s*['\"][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD)['\"]\s*,\s*['\"][^'\"]{8,}['\"]", re.I),
+        re.compile(r"['\"]password['\"]\s*=>\s*['\"][^'\"]{4,}['\"]", re.I),
+    ]
+    for path in ROOT.rglob("*.php"):
+        if ".git" in path.parts or path.name == "config.example.php":
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if any(pattern.search(text) for pattern in patterns):
+            error(f"秘密値の直書き疑い: {path.relative_to(ROOT)}")
+
+
 def main() -> int:
     check_json()
     check_sitemap()
     check_html()
     check_files()
+    check_secrets()
     for warning in sorted(set(WARNINGS)):
         print(f"WARNING: {warning}")
     if ERRORS:

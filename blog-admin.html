@@ -146,13 +146,13 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
     <div class="login-sub">BLOG ADMIN PANEL</div>
     <div class="login-field">
       <label class="login-label">USERNAME</label>
-      <input type="text" class="login-input" id="loginUser" placeholder="admin" onkeydown="if(event.key==='Enter')login()">
+      <input type="text" class="login-input" id="loginUser" placeholder="ユーザー名" autocomplete="username">
     </div>
     <div class="login-field">
       <label class="login-label">PASSWORD</label>
-      <input type="password" class="login-input" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      <input type="password" class="login-input" id="loginPass" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="login-btn" onclick="login()">ログイン</button>
+    <button class="login-btn" id="loginBtn">ログイン</button>
     <p class="login-error" id="loginError">ユーザー名またはパスワードが違います</p>
   </div>
 </div>
@@ -163,7 +163,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
     <div class="admin-logo">RSS7 <em>AI</em> Works <span>BLOG ADMIN</span></div>
     <div class="header-right">
       <span class="user-badge" id="userBadge"></span>
-      <button class="logout-btn" onclick="logout()">ログアウト</button>
+      <button class="logout-btn" id="logoutBtn">ログアウト</button>
     </div>
   </div>
   <div class="admin-body">
@@ -174,16 +174,16 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
       <div class="stat-box"><span class="stat-num" id="statImg">-</span><span class="stat-label">画像数</span></div>
     </div>
     <div class="tabs">
-      <button class="tab-btn active" onclick="showTab('list',this)">記事一覧</button>
-      <button class="tab-btn" onclick="showTab('edit',this)">新規作成</button>
-      <button class="tab-btn" onclick="showTab('images',this)">🖼 画像フォルダ</button>
+      <button class="tab-btn active" data-tab="list">記事一覧</button>
+      <button class="tab-btn" data-tab="edit">新規作成</button>
+      <button class="tab-btn" data-tab="images">🖼 画像フォルダ</button>
     </div>
 
     <!-- 記事一覧 -->
     <div class="tab-content active" id="tab-list">
       <div class="section-header">
         <h2>記事一覧</h2>
-        <button class="new-btn" onclick="newArticle()">＋ 新規作成</button>
+        <button class="new-btn" id="newArticleBtn">＋ 新規作成</button>
       </div>
       <div id="articleList"><div class="loading">読み込み中...</div></div>
     </div>
@@ -221,9 +221,9 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
       <div class="form-group">
         <label class="form-label">アイキャッチ画像（サーバーに保存）</label>
         <div class="upload-area" id="uploadArea">
-          <input type="file" id="imageFile" accept="image/*" onchange="uploadImage(event)">
+          <input type="file" id="imageFile" accept="image/jpeg,image/png,image/webp,image/gif">
           <span class="upload-icon">📁</span>
-          <p>タップして画像を選択・アップロード<br><small style="color:var(--gray);font-size:0.7rem;">JPG・PNG・WebP 最大5MB</small></p>
+          <p>タップして画像を選択・アップロード<br><small style="color:var(--gray);font-size:0.7rem;">JPG・PNG・WebP・GIF 最大5MB</small></p>
         </div>
         <div class="upload-progress" id="uploadProgress">
           <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -232,7 +232,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
         <div class="preview-wrap" id="previewWrap">
           <img id="previewImg" src="" alt="">
           <span class="preview-name" id="previewName"></span>
-          <button class="remove-img" onclick="removeImage()">✕ 画像を削除</button>
+          <button class="remove-img" id="removeImageBtn">✕ 画像を削除</button>
         </div>
         <input type="hidden" id="editImage">
       </div>
@@ -241,13 +241,13 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
       <div class="form-group">
         <label class="form-label">本文</label>
         <div class="editor-toolbar">
-          <button class="toolbar-btn" onclick="insertTag('b')"><b>B</b></button>
-          <button class="toolbar-btn" onclick="insertTag('i')"><i>I</i></button>
-          <button class="toolbar-btn" onclick="insertH2()">H2</button>
-          <button class="toolbar-btn" onclick="insertH3()">H3</button>
-          <button class="toolbar-btn" onclick="insertP()">¶</button>
-          <button class="toolbar-btn" onclick="insertLink()">🔗</button>
-          <button class="toolbar-btn" onclick="insertList()">≡</button>
+          <button class="toolbar-btn" data-command="bold"><b>B</b></button>
+          <button class="toolbar-btn" data-command="italic"><i>I</i></button>
+          <button class="toolbar-btn" data-command="h2">H2</button>
+          <button class="toolbar-btn" data-command="h3">H3</button>
+          <button class="toolbar-btn" data-command="p">¶</button>
+          <button class="toolbar-btn" data-command="link">🔗</button>
+          <button class="toolbar-btn" data-command="list">≡</button>
         </div>
         <textarea class="editor-area" id="editBody" placeholder="記事の内容をHTMLで入力できます。&#10;例：&lt;p&gt;本文&lt;/p&gt;"></textarea>
       </div>
@@ -257,8 +257,8 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
         <input type="text" class="form-input" id="editTag" placeholder="例：AI動画、WordPress">
       </div>
       <div class="form-actions">
-        <button class="btn-cancel" onclick="cancelEdit()">キャンセル</button>
-        <button class="btn-save" onclick="saveArticle()">保 存</button>
+        <button class="btn-cancel" id="cancelEditBtn">キャンセル</button>
+        <button class="btn-save" id="saveArticleBtn">保 存</button>
       </div>
     </div>
 
@@ -266,7 +266,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-ser
     <div class="tab-content" id="tab-images">
       <div class="section-header"><h2>画像フォルダ（サーバー保存）</h2></div>
       <div class="upload-area" style="margin-bottom:18px;">
-        <input type="file" accept="image/*" multiple onchange="uploadMultiple(event)">
+        <input type="file" id="multipleImageFile" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
         <span class="upload-icon">📂</span>
         <p>画像を追加（複数選択可）</p>
       </div>
@@ -288,19 +288,44 @@ let currentUser = null;
 let articles = [];
 let images = [];
 let currentImageUrl = '';
+let csrfToken = '';
+
+function escapeHTML(value){
+  return String(value ?? '').replace(/[&<>"']/g, char=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[char]);
+}
+
+function safeLocalImage(value){
+  const url = String(value ?? '');
+  return /^images\/blog\/[a-z0-9._~-]+\.(jpg|jpeg|png|webp|gif)$/i.test(url) ? url : '';
+}
+
+async function apiFetch(url, options = {}){
+  const headers = new Headers(options.headers || {});
+  if(csrfToken && (options.method || 'GET').toUpperCase() !== 'GET') headers.set('X-CSRF-Token', csrfToken);
+  const res = await fetch(url, {...options, headers, credentials:'same-origin'});
+  const data = await res.json().catch(()=>({success:false, message:'サーバー応答が不正です'}));
+  if(res.status === 401){
+    currentUser = null; csrfToken = '';
+    document.getElementById('adminScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+  return {res, data};
+}
 
 // ===== ログイン =====
 async function login(){
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
   try {
-    const res = await fetch(API.auth, {
+    const {data} = await apiFetch(API.auth, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({action:'login', username:u, password:p})
     });
-    const data = await res.json();
     if(data.success){
       currentUser = data.user;
+      csrfToken = data.csrf;
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('adminScreen').style.display = 'block';
       document.getElementById('userBadge').textContent = data.user.name + ' さん';
@@ -321,8 +346,19 @@ async function login(){
   }
 }
 
-function logout(){
+async function logout(){
+  try {
+    const {data} = await apiFetch(API.auth, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'logout'})
+    });
+    if(!data.success){ showToast(data.message || 'ログアウトに失敗しました'); return; }
+  } catch(e) {
+    showToast('ログアウトに失敗しました');
+    return;
+  }
   currentUser = null;
+  csrfToken = '';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminScreen').style.display = 'none';
   document.getElementById('loginUser').value = '';
@@ -341,8 +377,7 @@ function showTab(name, btn){
 // ===== 記事読み込み =====
 async function loadArticles(){
   try {
-    const res = await fetch(API.articles + '?status=all');
-    const data = await res.json();
+    const {data} = await apiFetch(API.articles + '?status=all');
     if(data.success){ articles = data.articles; renderArticleList(); updateStats(articles, images); }
   } catch(e) { document.getElementById('articleList').innerHTML = '<div class="empty-msg">サーバーに接続できません</div>'; }
 }
@@ -353,22 +388,24 @@ function renderArticleList(){
   el.innerHTML = articles.map(a=>`
     <div class="article-item">
       <div class="article-thumb">
-        ${a.image ? `<img src="${a.image}" alt="">` : (a.emoji||'📝')}
+        ${safeLocalImage(a.image) ? `<img src="${escapeHTML(safeLocalImage(a.image))}" alt="">` : escapeHTML(a.emoji||'📝')}
       </div>
       <div class="article-info">
         <div class="article-meta">
-          <span class="cat-badge">${a.cat}</span>
-          <span>${a.date}</span>
+          <span class="cat-badge">${escapeHTML(a.cat)}</span>
+          <span>${escapeHTML(a.date)}</span>
           <span class="${a.status==='published'?'status-pub':'status-draft'}">${a.status==='published'?'●公開':'○下書き'}</span>
         </div>
-        <div class="article-title">${a.title}</div>
+        <div class="article-title">${escapeHTML(a.title)}</div>
       </div>
       <div class="article-actions">
-        <button class="btn-edit" onclick="editArticle('${a.id}')">編集</button>
-        <button class="btn-del" onclick="deleteArticle('${a.id}')">削除</button>
+        <button type="button" class="btn-edit" data-action="edit" data-id="${escapeHTML(a.id)}">編集</button>
+        <button type="button" class="btn-del" data-action="delete" data-id="${escapeHTML(a.id)}">削除</button>
       </div>
     </div>
   `).join('');
+  el.querySelectorAll('[data-action="edit"]').forEach(btn=>btn.addEventListener('click', ()=>editArticle(btn.dataset.id || '')));
+  el.querySelectorAll('[data-action="delete"]').forEach(btn=>btn.addEventListener('click', ()=>deleteArticle(btn.dataset.id || '')));
 }
 
 function updateStats(arts, imgs){
@@ -435,11 +472,11 @@ async function saveArticle(){
   };
 
   try {
-    const res = await fetch(API.articles, {
+    const {data} = await apiFetch(API.articles, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(article)
     });
-    const data = await res.json();
+    if(!data.success){ showToast(data.message || '保存に失敗しました'); return; }
     showToast(data.message);
     await loadArticles();
     cancelEdit();
@@ -449,11 +486,11 @@ async function saveArticle(){
 async function deleteArticle(id){
   if(!confirm('削除しますか？')) return;
   try {
-    const res = await fetch(API.articles, {
+    const {data} = await apiFetch(API.articles, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({action:'delete', id})
     });
-    const data = await res.json();
+    if(!data.success){ showToast(data.message || '削除に失敗しました'); return; }
     showToast(data.message);
     await loadArticles();
   } catch(e) { showToast('削除に失敗しました'); }
@@ -476,8 +513,7 @@ async function uploadImage(e){
   const timer = setInterval(()=>{ w=Math.min(w+10,90); document.getElementById('progressFill').style.width=w+'%'; }, 100);
 
   try {
-    const res = await fetch(API.upload, {method:'POST', body: formData});
-    const data = await res.json();
+    const {data} = await apiFetch(API.upload, {method:'POST', body: formData});
     clearInterval(timer);
     document.getElementById('progressFill').style.width = '100%';
     setTimeout(()=>{ document.getElementById('uploadProgress').style.display='none'; }, 500);
@@ -514,7 +550,10 @@ async function uploadMultiple(e){
   for(const file of files){
     const fd = new FormData();
     fd.append('image', file);
-    try { await fetch(API.upload, {method:'POST', body:fd}); } catch(err){}
+    try {
+      const {data} = await apiFetch(API.upload, {method:'POST', body:fd});
+      if(!data.success) showToast(data.message || '一部の画像をアップロードできませんでした');
+    } catch(err){ showToast('一部の画像をアップロードできませんでした'); }
   }
   await loadImages();
   showToast('アップロード完了！');
@@ -523,8 +562,7 @@ async function uploadMultiple(e){
 // ===== 画像一覧 =====
 async function loadImages(){
   try {
-    const res = await fetch(API.upload);
-    const data = await res.json();
+    const {data} = await apiFetch(API.upload);
     if(data.success){
       images = data.images;
       renderImageGrid();
@@ -540,14 +578,16 @@ function renderImageGrid(){
   if(!images.length){ grid.innerHTML='<div class="empty-msg">画像がありません</div>'; return; }
   grid.innerHTML = images.map(img=>`
     <div class="img-item">
-      <img src="${img.url}" alt="${img.name}" loading="lazy">
+      <img src="${escapeHTML(safeLocalImage(img.url))}" alt="${escapeHTML(img.name)}" loading="lazy">
       <div class="img-overlay">
-        <button class="img-btn" onclick="selectImage('${img.url}','${img.name}')">使用</button>
-        <button class="img-btn" onclick="deleteServerImage('${img.name}')">削除</button>
+        <button type="button" class="img-btn" data-action="select" data-url="${escapeHTML(safeLocalImage(img.url))}" data-name="${escapeHTML(img.name)}">使用</button>
+        <button type="button" class="img-btn" data-action="delete" data-name="${escapeHTML(img.name)}">削除</button>
       </div>
-      <div class="img-name">${img.name}</div>
+      <div class="img-name">${escapeHTML(img.name)}</div>
     </div>
   `).join('');
+  grid.querySelectorAll('[data-action="select"]').forEach(btn=>btn.addEventListener('click', ()=>selectImage(btn.dataset.url || '', btn.dataset.name || '')));
+  grid.querySelectorAll('[data-action="delete"]').forEach(btn=>btn.addEventListener('click', ()=>deleteServerImage(btn.dataset.name || '')));
 }
 
 function selectImage(url, name){
@@ -563,11 +603,11 @@ function selectImage(url, name){
 async function deleteServerImage(name){
   if(!confirm('削除しますか？')) return;
   try {
-    const res = await fetch(API.upload + '?action=delete', {
+    const {data} = await apiFetch(API.upload + '?action=delete', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({name})
     });
-    const data = await res.json();
+    if(!data.success){ showToast(data.message || '削除に失敗しました'); return; }
     showToast(data.message);
     await loadImages();
   } catch(e) { showToast('削除に失敗しました'); }
@@ -594,6 +634,36 @@ function showToast(msg){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2800);
 }
+
+async function restoreSession(){
+  try {
+    const {data} = await apiFetch(API.auth);
+    if(!data.authenticated) return;
+    currentUser = data.user;
+    csrfToken = data.csrf;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminScreen').style.display = 'block';
+    document.getElementById('userBadge').textContent = data.user.name + ' さん';
+    await loadArticles();
+    await loadImages();
+  } catch(e) {}
+}
+
+document.getElementById('loginBtn').addEventListener('click', login);
+document.getElementById('logoutBtn').addEventListener('click', logout);
+['loginUser','loginPass'].forEach(id=>document.getElementById(id).addEventListener('keydown', event=>{
+  if(event.key === 'Enter') login();
+}));
+document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click', ()=>showTab(btn.dataset.tab, btn)));
+document.getElementById('newArticleBtn').addEventListener('click', newArticle);
+document.getElementById('imageFile').addEventListener('change', uploadImage);
+document.getElementById('multipleImageFile').addEventListener('change', uploadMultiple);
+document.getElementById('removeImageBtn').addEventListener('click', removeImage);
+document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+document.getElementById('saveArticleBtn').addEventListener('click', saveArticle);
+const commands = {bold:()=>insertTag('b'), italic:()=>insertTag('i'), h2:insertH2, h3:insertH3, p:insertP, link:insertLink, list:insertList};
+document.querySelectorAll('[data-command]').forEach(btn=>btn.addEventListener('click', ()=>commands[btn.dataset.command]?.()));
+restoreSession();
 </script>
 </body>
 </html>
