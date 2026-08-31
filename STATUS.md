@@ -13,6 +13,8 @@
 - Production verification: `OFF`
 - Automatic rollback: `OFF`
 - Active issue: none
+- Last merged commit: none
+- Last verified commit: none
 - Blocked reason: none
 
 ## Phase 1 objective
