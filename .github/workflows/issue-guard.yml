@@ -1,0 +1,58 @@
+name: AI issue guard
+
+on:
+  issues:
+    types: [labeled, reopened]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  enforce-single-active:
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'status:doing'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Enforce one implementation issue in Phase 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="${{ github.event.issue.number }}"
+          active=$(gh issue list --repo "$REPO" --state open --label "status:doing" --json number --jq '.[].number')
+          count=$(printf '%s\n' "$active" | sed '/^$/d' | wc -l)
+          if [ "$count" -le 1 ]; then
+            exit 0
+          fi
+
+          gh issue edit "$current" --repo "$REPO" --remove-label "status:doing" --add-label "status:blocked" >/dev/null
+          gh issue comment "$current" --repo "$REPO" --body "Phase 1の同時実装上限（1件）を超えたため自動でblockedにしました。" >/dev/null
+
+  timeout-watchdog:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Block stale doing issues after 12 hours
+        shell: bash
+        run: |
+          set -euo pipefail
+          now=$(date -u +%s)
+          gh issue list --repo "$REPO" --state open --label "status:doing" --limit 100 --json number,updatedAt \
+            --jq '.[] | "\(.number) \(.updatedAt)"' > /tmp/active-issues.txt
+
+          while read -r number updated; do
+            [ -z "${number:-}" ] && continue
+            updated_epoch=$(date -u -d "$updated" +%s)
+            age=$((now - updated_epoch))
+            if [ "$age" -gt 43200 ]; then
+              gh issue edit "$number" --repo "$REPO" --remove-label "status:doing" --add-label "status:blocked" >/dev/null
+              gh issue comment "$number" --repo "$REPO" --body "12時間以上更新がないため、自動実装をblockedにしました。状況確認後に再開してください。" >/dev/null
+            fi
+          done < /tmp/active-issues.txt
