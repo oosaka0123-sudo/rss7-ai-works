@@ -45,6 +45,7 @@ GitHubをSSOTとする。
 - 公開画像
 - `data/articles.json`
 - `robots.txt` と `sitemap.xml`
+- `api/` のブログ管理API（認証・記事・アップロード処理を含む）
 
 ## 公開環境
 
@@ -57,6 +58,7 @@ GitHubをSSOTとする。
 - API、自動投稿、FTPなどの秘密情報はGitHub Secretsまたはサーバー環境変数で管理する。
 - 受領ZIP内の旧メールフォーム、ログ、バックアップ、未監査PHP、サーバー設定、内包ZIPは公開しない。
 - `.htaccess`、DB、認証、決済、課金、Secrets、ドメイン、デプロイ方式変更は人間承認必須とする。
+- `api/` は高リスク領域として、Julesの低リスク自動更新対象から除外する。
 
 ## Phase 1
 
@@ -77,11 +79,11 @@ Phase 1は安全なJules-first自動実装基盤を作る。
 
 自動マージ、自動デプロイ、本番検証、自動ロールバックは、Phase 1の安全ゲートを実運用で確認した後に順次有効化する。
 
-## 既知の不足
+## 現在の残課題
 
-- `api/articles.php`
-- `api/auth.php`
-- `api/upload.php`
-- `images/og-image.jpg`
-
-不足ファイルは稼働サーバーから別途取得し、秘密情報を除去・分離してから追加する。
+- JulesのGitHub連携でこのリポジトリを許可する
+- GitHub Actions Secret `JULES_API_KEY` を設定する
+- mainの保護ルールと必須チェックを有効化する
+- repository auto-mergeを安全ゲート確認後に有効化する
+- ロリポップへの限定自動デプロイ方式を設計する
+- 本番ヘルスチェックと自動ロールバック条件を実装する
