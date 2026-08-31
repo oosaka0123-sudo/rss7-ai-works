@@ -32,6 +32,7 @@
     "status": "bootstrapping",
     "active_issue": null,
     "last_merged_pr": null,
+    "last_merged_commit": null,
     "last_verified_commit": null,
     "last_deploy_check": null,
     "blocked_reason": null
