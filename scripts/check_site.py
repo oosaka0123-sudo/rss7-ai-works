@@ -81,6 +81,8 @@ def check_json() -> None:
         ids.add(article_id)
         if article.get("status") not in {"published", "draft"}:
             error(f"data/articles.json: id {article_id} のstatusが不正です")
+        if article.get("status") == "draft":
+            error(f"data/articles.json: 公開フォールバックに下書きがあります (id {article_id})")
 
 
 def check_sitemap() -> None:

@@ -348,11 +348,15 @@ async function login(){
 
 async function logout(){
   try {
-    await apiFetch(API.auth, {
+    const {data} = await apiFetch(API.auth, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({action:'logout'})
     });
-  } catch(e) {}
+    if(!data.success){ showToast(data.message || 'ログアウトに失敗しました'); return; }
+  } catch(e) {
+    showToast('ログアウトに失敗しました');
+    return;
+  }
   currentUser = null;
   csrfToken = '';
   document.getElementById('loginScreen').style.display = 'flex';

@@ -11,6 +11,11 @@ const ALLOWED_TYPES = [
     'image/gif' => 'gif',
 ];
 
+function is_allowed_image_name(string $name): bool
+{
+    return (bool)preg_match('/^[a-zA-Z0-9._~-]+\.(jpg|jpeg|png|webp|gif)$/', $name);
+}
+
 require_method('GET', 'POST');
 require_admin();
 
@@ -23,7 +28,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     foreach (glob(UPLOAD_DIR . '*.{jpg,jpeg,png,webp,gif}', GLOB_BRACE) ?: [] as $path) {
         if (!is_file($path)) continue;
         $name = basename($path);
-        $images[] = ['name' => $name, 'url' => PUBLIC_PREFIX . rawurlencode($name), 'size' => filesize($path)];
+        if (!is_allowed_image_name($name)) continue;
+        $images[] = ['name' => $name, 'url' => PUBLIC_PREFIX . $name, 'size' => filesize($path)];
     }
     usort($images, static fn($a, $b) => strcmp($b['name'], $a['name']));
     json_response(['success' => true, 'images' => $images]);
@@ -33,7 +39,7 @@ require_csrf();
 if (($_GET['action'] ?? '') === 'delete') {
     $input = request_json();
     $name = basename((string)($input['name'] ?? ''));
-    if (!preg_match('/^[a-zA-Z0-9._~-]+\.(jpg|jpeg|png|webp|gif)$/', $name)) {
+    if (!is_allowed_image_name($name)) {
         json_response(['success' => false, 'message' => 'ファイル名が不正です'], 400);
     }
     $path = UPLOAD_DIR . $name;

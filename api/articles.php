@@ -2,33 +2,81 @@
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 
-const ARTICLES_FILE = __DIR__ . '/../data/articles.json';
+const PUBLIC_ARTICLES_FILE = __DIR__ . '/../data/articles.json';
 
-function read_articles(): array
+function read_article_file(string $path): array
 {
-    if (!is_file(ARTICLES_FILE)) return ['articles' => []];
-    $decoded = json_decode((string)file_get_contents(ARTICLES_FILE), true);
-    return is_array($decoded) && isset($decoded['articles']) && is_array($decoded['articles']) ? $decoded : ['articles' => []];
+    if (!is_file($path)) json_response(['success' => false, 'message' => '記事データがありません'], 500);
+    $contents = file_get_contents($path);
+    $decoded = $contents === false ? null : json_decode($contents, true);
+    if (!is_array($decoded) || !isset($decoded['articles']) || !is_array($decoded['articles'])) {
+        json_response(['success' => false, 'message' => '記事データが破損しています'], 500);
+    }
+    return $decoded;
 }
 
-function write_articles_atomic(array $data): void
+function private_articles_file(): string
+{
+    $config = local_config();
+    $directory = (string)($config['private_data_dir'] ?? '');
+    if ($directory === '' || $directory[0] !== DIRECTORY_SEPARATOR) {
+        json_response(['success' => false, 'message' => '非公開データ保存先が未設定です'], 503);
+    }
+    if (!is_dir($directory) && !mkdir($directory, 0700, true)) {
+        json_response(['success' => false, 'message' => '非公開データ保存先を作成できません'], 500);
+    }
+    $resolvedDirectory = realpath($directory);
+    $documentRoot = realpath((string)($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__)));
+    if ($resolvedDirectory === false || $documentRoot === false
+        || $resolvedDirectory === $documentRoot
+        || strpos($resolvedDirectory . DIRECTORY_SEPARATOR, $documentRoot . DIRECTORY_SEPARATOR) === 0) {
+        json_response(['success' => false, 'message' => '非公開データ保存先は公開領域の外に指定してください'], 500);
+    }
+    return $resolvedDirectory . DIRECTORY_SEPARATOR . 'articles.json';
+}
+
+function write_articles_atomic(string $path, array $data): void
 {
     $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
-    $temporary = ARTICLES_FILE . '.tmp.' . bin2hex(random_bytes(6));
-    if ($json === false || file_put_contents($temporary, $json . "\n", LOCK_EX) === false || !rename($temporary, ARTICLES_FILE)) {
+    $temporary = $path . '.tmp.' . bin2hex(random_bytes(6));
+    if ($json === false || file_put_contents($temporary, $json . "\n", LOCK_EX) === false || !rename($temporary, $path)) {
         if (is_file($temporary)) @unlink($temporary);
         json_response(['success' => false, 'message' => '記事データを保存できません'], 500);
     }
 }
 
-function mutate_articles(callable $callback): array
+function published_articles(array $data): array
 {
-    $lock = fopen(ARTICLES_FILE . '.lock', 'c');
+    return ['articles' => array_values(array_filter(
+        $data['articles'] ?? [],
+        static fn($article) => ($article['status'] ?? '') === 'published'
+    ))];
+}
+
+function read_private_articles(): array
+{
+    $privateFile = private_articles_file();
+    $lock = fopen($privateFile . '.lock', 'c');
     if ($lock === false || !flock($lock, LOCK_EX)) json_response(['success' => false, 'message' => '記事データをロックできません'], 500);
     try {
-        $db = read_articles();
+        if (!is_file($privateFile)) write_articles_atomic($privateFile, read_article_file(PUBLIC_ARTICLES_FILE));
+        return read_article_file($privateFile);
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
+}
+
+function mutate_articles(callable $callback): array
+{
+    $privateFile = private_articles_file();
+    $lock = fopen($privateFile . '.lock', 'c');
+    if ($lock === false || !flock($lock, LOCK_EX)) json_response(['success' => false, 'message' => '記事データをロックできません'], 500);
+    try {
+        if (!is_file($privateFile)) write_articles_atomic($privateFile, read_article_file(PUBLIC_ARTICLES_FILE));
+        $db = read_article_file($privateFile);
         $result = $callback($db);
-        write_articles_atomic($db);
+        write_articles_atomic($privateFile, $db);
         return $result;
     } finally {
         flock($lock, LOCK_UN);
@@ -78,12 +126,14 @@ function clean_article_html(string $html): string
 
 require_method('GET', 'POST');
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
-    $db = read_articles();
     $status = (string)($_GET['status'] ?? 'published');
-    if ($status === 'all') require_admin();
-    $articles = $status === 'all'
-        ? $db['articles']
-        : array_values(array_filter($db['articles'], static fn($article) => ($article['status'] ?? '') === 'published'));
+    if ($status === 'all') {
+        require_admin();
+        $db = read_private_articles();
+        $articles = $db['articles'];
+    } else {
+        $articles = published_articles(read_private_articles())['articles'];
+    }
     json_response(['success' => true, 'articles' => $articles]);
 }
 

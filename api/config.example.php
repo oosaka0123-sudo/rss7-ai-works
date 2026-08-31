@@ -5,6 +5,8 @@
  * config.local.php is ignored by Git and must never be committed.
  */
 return [
+    // Replace this with a writable absolute path outside every public_html/document root.
+    'private_data_dir' => '/absolute/path/outside/public_html/rss7-private',
     'users' => [
         'mako' => [
             'name' => 'MAKO',
