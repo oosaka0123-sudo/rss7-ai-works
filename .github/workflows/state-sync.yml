@@ -39,7 +39,7 @@ jobs:
 
           if os.environ.get('EVENT_NAME') == 'pull_request':
               current['last_merged_pr'] = int(os.environ['PR_NUMBER'])
-              current['last_verified_commit'] = os.environ.get('MERGE_SHA') or None
+              current['last_merged_commit'] = os.environ.get('MERGE_SHA') or None
               current['status'] = 'idle'
               current['active_issue'] = None
               current['blocked_reason'] = None
@@ -72,6 +72,7 @@ jobs:
               f"- Automatic rollback: `{onoff(automation.get('automatic_rollback', False))}`",
               f"- Active issue: `{current.get('active_issue') or 'none'}`",
               f"- Last merged PR: `{current.get('last_merged_pr') or 'none'}`",
+              f"- Last merged commit: `{current.get('last_merged_commit') or 'none'}`",
               f"- Last verified commit: `{current.get('last_verified_commit') or 'none'}`",
               f"- Blocked reason: `{current.get('blocked_reason') or 'none'}`",
               '',
