@@ -5,7 +5,7 @@ RSS7 AI Works is a public Japanese website. Review pull requests as an independe
 Prioritize:
 
 1. Security: XSS, unsafe `innerHTML`, untrusted URLs, inline event handlers, secrets, credentials, upload endpoints, and accidentally published archives or backups.
-2. User trust: never claim a form was sent when it only opens `mailto:`; avoid unsupported guarantees about delivery dates, price, quality, rights, AI output, or partnerships.
+2. User trust: distinguish server acceptance from mailbox delivery; never claim guaranteed email delivery. Avoid unsupported guarantees about delivery dates, price, quality, rights, AI output, or partnerships.
 3. Privacy: flag unnecessary personal data collection, unclear third-party AI processing, or missing consent and retention explanations.
 4. Accessibility: semantic forms and buttons, keyboard access, labels, ARIA state, focus behavior, reduced motion, and content hidden when JavaScript fails.
 5. SEO and integrity: canonical URLs, OG metadata, sitemap consistency, broken local links, structured data, and stale article URLs.
