@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows: ["Site quality"]
     types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,51 +14,83 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-manual:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate public site
+        run: python scripts/check_site.py
+      - name: Validate inline JavaScript syntax
+        run: node scripts/check_inline_js.mjs
+      - name: Validate PHP syntax
+        run: |
+          if ! command -v php >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y php-cli
+          fi
+          find api -name '*.php' -print0 | xargs -0 -n1 php -l
+
   deploy:
+    needs: [validate-manual]
     if: >-
+      always() &&
+      vars.LOLIPOP_DEPLOY_ENABLED == 'true' &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
+      needs.validate-manual.result == 'success') ||
+      (github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main' &&
-      vars.LOLIPOP_DEPLOY_ENABLED == 'true'
+      github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-latest
     environment: production
     env:
-      DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
-      DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
-      DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
       DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
       DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
       DEPLOY_DIR: ${{ vars.LOLIPOP_DEPLOY_DIR }}
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      SITE_URL: ${{ vars.LOLIPOP_SITE_URL }}
     steps:
       - name: Check deployment configuration
-        id: config
         shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
         run: |
+          set -euo pipefail
           set +x
-          ready=true
-          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || ready=false
-          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || ready=false
-          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || ready=false
-          [[ "$DEPLOY_DIR" =~ ^/[A-Za-z0-9._/-]+$ && "$DEPLOY_DIR" != "/" ]] || ready=false
-          echo "ready=$ready" >> "$GITHUB_OUTPUT"
-          if [[ "$ready" != true ]]; then
-            echo "Deployment skipped: production settings are missing or invalid."
-          fi
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] \
+            || { echo "Deployment secrets are incomplete."; exit 1; }
+          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] \
+            || { echo "FTP scheme is invalid."; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] \
+            || { echo "FTP port is invalid."; exit 1; }
+          [[ "$DEPLOY_DIR" =~ ^/[A-Za-z0-9._/-]+$ && "$DEPLOY_DIR" != "/" ]] \
+            || { echo "Deployment directory is invalid."; exit 1; }
+          [[ "$SITE_URL" =~ ^https://[A-Za-z0-9.-]+/?$ ]] \
+            || { echo "Site URL is invalid."; exit 1; }
 
       - name: Check out validated revision
-        if: steps.config.outputs.ready == 'true'
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ env.DEPLOY_SHA }}
           persist-credentials: false
 
       - name: Install lftp
-        if: steps.config.outputs.ready == 'true'
         run: sudo apt-get update && sudo apt-get install -y lftp
 
       - name: Upload validated site
-        if: steps.config.outputs.ready == 'true'
         shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
         run: |
           set -euo pipefail
           set +x
@@ -70,7 +103,35 @@ jobs:
           set ftp:ssl-protect-data true
           open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
           mirror --reverse --verbose=1 --parallel=2 --no-perms \
-            --exclude-rx='(^|/)api/config[.]local[.]php$|(^|/)data/articles[.]json$|(^|/)images/blog(/|$)|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md)$|[.]zip$' \
+            --exclude-rx='(^|/)api/config[.](local|example)[.]php$|(^|/)data/articles[.]json$|(^|/)images/blog/.*[.](jpe?g|png|webp|gif)$|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)[.]gitignore$|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md|README[.]md)$|[.]zip$' \
             ./ "$DEPLOY_DIR"
           bye
           LFTP
+
+      - name: Verify production
+        shell: bash
+        run: |
+          set -euo pipefail
+          SITE_URL="${SITE_URL%/}"
+          verified=false
+          for attempt in 1 2 3 4 5 6; do
+            page="$(curl --fail --silent --show-error "$SITE_URL/contact.html?deploy=$DEPLOY_SHA" || true)"
+            api="$(curl --fail --silent --show-error "$SITE_URL/api/contact.php?deploy=$DEPLOY_SHA" || true)"
+            articles="$(curl --fail --silent --show-error "$SITE_URL/api/articles.php?status=published&deploy=$DEPLOY_SHA" || true)"
+            if grep -Fq '問い合わせを送信する' <<< "$page" \
+              && jq -e '.success == true and (.csrf | type == "string")' <<< "$api" >/dev/null 2>&1 \
+              && jq -e '.success == true and (.articles | type == "array")' <<< "$articles" >/dev/null 2>&1; then
+              verified=true
+              break
+            fi
+            sleep 5
+          done
+          if [[ "$verified" != true ]]; then
+            echo "Production page, contact API, or article API verification failed."
+            exit 1
+          fi
+          protected_status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$SITE_URL/data/articles.json?deploy=$DEPLOY_SHA")"
+          if [[ "$protected_status" != "403" ]]; then
+            echo "Protected article seed returned HTTP $protected_status instead of 403."
+            exit 1
+          fi

@@ -35,6 +35,25 @@ function contact_request_json(): array
     return $data;
 }
 
+function contact_config(): array
+{
+    if (!function_exists('mb_substr') || !function_exists('mail')) {
+        json_response(['success' => false, 'message' => 'お問い合わせ受付に必要なPHP機能がありません'], 503);
+    }
+    $config = local_config();
+    $recipient = (string)($config['contact_recipient'] ?? '');
+    $sender = (string)($config['contact_sender'] ?? '');
+    $secret = (string)($config['contact_rate_secret'] ?? '');
+    if (preg_match('/[\r\n]/', $recipient . $sender)
+        || !filter_var($recipient, FILTER_VALIDATE_EMAIL)
+        || !preg_match('/^[A-Za-z0-9._%+-]+@rss7[.]net$/D', $sender)
+        || !preg_match('/^[a-f0-9]{64}$/D', $secret)) {
+        json_response(['success' => false, 'message' => 'お問い合わせ受付の設定が未完了です'], 503);
+    }
+    private_data_directory();
+    return $config;
+}
+
 function enforce_contact_rate_limit(array $config, int $now): void
 {
     $secret = (string)($config['contact_rate_secret'] ?? '');
@@ -78,6 +97,7 @@ function enforce_contact_rate_limit(array $config, int $now): void
 require_method('GET', 'POST');
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
+    contact_config();
     $_SESSION['contact_form_issued_at'] = time();
     json_response(['success' => true, 'csrf' => csrf_token()]);
 }
@@ -123,14 +143,9 @@ if ($tel !== '' && !preg_match('/^[0-9+()\-\s]{6,40}$/', $tel)) {
     json_response(['success' => false, 'message' => '電話番号を正しく入力してください'], 400);
 }
 
-$config = local_config();
+$config = contact_config();
 $recipient = (string)($config['contact_recipient'] ?? '');
 $sender = (string)($config['contact_sender'] ?? '');
-if (preg_match('/[\r\n]/', $recipient . $sender)
-    || !filter_var($recipient, FILTER_VALIDATE_EMAIL)
-    || !preg_match('/^[A-Za-z0-9._%+-]+@rss7[.]net$/D', $sender)) {
-    json_response(['success' => false, 'message' => 'お問い合わせ受付の設定が未完了です'], 503);
-}
 enforce_contact_rate_limit($config, $now);
 
 $safeService = contact_header_text($service);
