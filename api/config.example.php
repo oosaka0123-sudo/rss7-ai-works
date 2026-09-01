@@ -7,6 +7,10 @@
 return [
     // Replace this with a writable absolute path outside every public_html/document root.
     'private_data_dir' => '/absolute/path/outside/public_html/rss7-private',
+    'contact_recipient' => 'info@rss7.net',
+    'contact_sender' => 'info@rss7.net',
+    // Generate with: php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+    'contact_rate_secret' => 'replace-with-a-random-64-character-hex-value',
     'users' => [
         'mako' => [
             'name' => 'MAKO',

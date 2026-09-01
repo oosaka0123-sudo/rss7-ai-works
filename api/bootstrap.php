@@ -73,3 +73,23 @@ function local_config(): array
     if (!is_array($config)) json_response(['success' => false, 'message' => 'サーバー設定が不正です'], 500);
     return $config;
 }
+
+function private_data_directory(): string
+{
+    $config = local_config();
+    $directory = (string)($config['private_data_dir'] ?? '');
+    if ($directory === '' || $directory[0] !== DIRECTORY_SEPARATOR) {
+        json_response(['success' => false, 'message' => '非公開データ保存先が未設定です'], 503);
+    }
+    if (!is_dir($directory) && !mkdir($directory, 0700, true)) {
+        json_response(['success' => false, 'message' => '非公開データ保存先を作成できません'], 500);
+    }
+    $resolvedDirectory = realpath($directory);
+    $documentRoot = realpath((string)($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__)));
+    if ($resolvedDirectory === false || $documentRoot === false
+        || $resolvedDirectory === $documentRoot
+        || strpos($resolvedDirectory . DIRECTORY_SEPARATOR, $documentRoot . DIRECTORY_SEPARATOR) === 0) {
+        json_response(['success' => false, 'message' => '非公開データ保存先は公開領域の外に指定してください'], 500);
+    }
+    return $resolvedDirectory;
+}

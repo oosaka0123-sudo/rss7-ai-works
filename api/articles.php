@@ -17,22 +17,7 @@ function read_article_file(string $path): array
 
 function private_articles_file(): string
 {
-    $config = local_config();
-    $directory = (string)($config['private_data_dir'] ?? '');
-    if ($directory === '' || $directory[0] !== DIRECTORY_SEPARATOR) {
-        json_response(['success' => false, 'message' => '非公開データ保存先が未設定です'], 503);
-    }
-    if (!is_dir($directory) && !mkdir($directory, 0700, true)) {
-        json_response(['success' => false, 'message' => '非公開データ保存先を作成できません'], 500);
-    }
-    $resolvedDirectory = realpath($directory);
-    $documentRoot = realpath((string)($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__)));
-    if ($resolvedDirectory === false || $documentRoot === false
-        || $resolvedDirectory === $documentRoot
-        || strpos($resolvedDirectory . DIRECTORY_SEPARATOR, $documentRoot . DIRECTORY_SEPARATOR) === 0) {
-        json_response(['success' => false, 'message' => '非公開データ保存先は公開領域の外に指定してください'], 500);
-    }
-    return $resolvedDirectory . DIRECTORY_SEPARATOR . 'articles.json';
+    return private_data_directory() . DIRECTORY_SEPARATOR . 'articles.json';
 }
 
 function write_articles_atomic(string $path, array $data): void

@@ -9,5 +9,6 @@ The API source contains no passwords or API keys.
 5. Replace the example `private_data_dir` with a writable absolute path outside every `public_html`/document root. Drafts and the complete article database are stored only there.
 6. Make `images/blog/` writable by the PHP process, without granting broader permissions than required. The private data directory itself must also be writable so atomic rename can succeed.
 7. Confirm that requesting `data/articles.json` on the production host returns HTTP 403. Apache uses `data/.htaccess` for this; GitHub Pages ignores it so the committed published-only snapshot remains available for static preview.
+8. Set `contact_recipient` to the mailbox that receives inquiries and `contact_sender` to an existing address on the `rss7.net` domain. Generate a unique `contact_rate_secret`; never reuse a password. Confirm delivery and the spam folder with a real test submission. A successful PHP response means the server accepted the message for delivery, not that the destination mailbox has received it.
 
 The original plaintext passwords supplied from the legacy server must not be reused.

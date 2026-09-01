@@ -91,7 +91,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;displa
 .btn-submit:hover{background:var(--cyan);box-shadow:0 0 30px rgba(0,255,238,0.3);}
 .btn-submit:disabled{opacity:0.5;cursor:not-allowed;}
 
-/* メールアプリ起動後の案内 */
+/* 送信結果の案内 */
 .mail-notice{
   display:none;
   background:rgba(0,255,238,0.05);
@@ -245,7 +245,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
     <div class="info-box">
       <span>💬</span>
       <h3>お問い合わせ方法</h3>
-      <p>メールアプリまたはLINEからご相談ください</p>
+      <p>お問い合わせフォームまたはLINEからご相談ください</p>
     </div>
     <div class="info-box">
       <span>⏰</span>
@@ -254,24 +254,24 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
     </div>
   </div>
 
-  <form class="contact-form fi" id="contactForm">
+  <form class="contact-form fi" id="contactForm" novalidate>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" for="name">お名前<span class="req">※必須</span></label>
-        <input type="text" class="form-input" id="name" name="name" placeholder="山田 太郎" autocomplete="name" required>
+        <input type="text" class="form-input" id="name" name="name" maxlength="80" placeholder="山田 太郎" autocomplete="name" required>
       </div>
       <div class="form-group">
         <label class="form-label" for="company">会社名・屋号</label>
-        <input type="text" class="form-input" id="company" name="company" placeholder="株式会社〇〇" autocomplete="organization">
+        <input type="text" class="form-input" id="company" name="company" maxlength="120" placeholder="株式会社〇〇" autocomplete="organization">
       </div>
     </div>
     <div class="form-group">
       <label class="form-label" for="email">メールアドレス<span class="req">※必須</span></label>
-      <input type="email" class="form-input" id="email" name="email" placeholder="info@example.com" autocomplete="email" required>
+      <input type="email" class="form-input" id="email" name="email" maxlength="254" placeholder="info@example.com" autocomplete="email" required>
     </div>
     <div class="form-group">
       <label class="form-label" for="tel">電話番号</label>
-      <input type="tel" class="form-input" id="tel" name="tel" placeholder="06-0000-0000" autocomplete="tel">
+      <input type="tel" class="form-input" id="tel" name="tel" maxlength="40" inputmode="tel" placeholder="06-0000-0000" autocomplete="tel">
     </div>
     <div class="form-group">
       <label class="form-label" for="service">ご相談内容<span class="req">※必須</span></label>
@@ -304,9 +304,10 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
       <label class="form-label" for="message">お問い合わせ内容<span class="req">※必須</span></label>
       <textarea class="form-textarea" id="message" name="message" maxlength="800" placeholder="ご要望・ご質問をご記入ください（800文字以内）。" required></textarea>
     </div>
-    <!-- ハニーポット：botが入力するダミーフィールド（非表示） -->
-    <div style="display:none;">
-      <input type="text" id="honeypot" name="honeypot" tabindex="-1" autocomplete="off">
+    <!-- ハニーポット：botが入力するダミーフィールド（画面外） -->
+    <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;">
+      <label for="website">ウェブサイト</label>
+      <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
     </div>
     <div class="form-check">
       <input type="checkbox" id="agree" required>
@@ -314,12 +315,11 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
         <a href="privacy.html" target="_blank" rel="noopener">プライバシーポリシー（別タブ）</a>に同意する
       </label>
     </div>
-    <p class="mail-guide">ボタンを押すと、お使いのメールアプリに問い合わせ内容の下書きを作成します。内容をご確認のうえ、メールアプリから送信してください。</p>
-    <button type="submit" class="btn-submit" id="submitBtn">メールアプリで問い合わせる</button>
-    <div class="mail-notice" id="mailNotice" role="status" aria-live="polite">
-      <h3>メール下書きの起動を試みました</h3>
-      <p>送信完了ではありません。内容を確認してメールアプリから送信してください。開かない場合は、下のボタンで内容をコピーし <a class="direct-email" href="mailto:info@rss7.net">info@rss7.net</a> 宛てにお送りください。</p>
-      <button type="button" class="btn-submit" id="copyBtn">問い合わせ内容をコピー</button>
+    <p class="mail-guide">入力内容は暗号化通信でRSS7 AI Worksへ送信されます。受付後、ご入力のメールアドレスへ返信します。</p>
+    <button type="submit" class="btn-submit" id="submitBtn">問い合わせを送信する</button>
+    <div class="mail-notice" id="mailNotice" role="status" aria-live="polite" tabindex="-1">
+      <h3 id="noticeTitle">送信状況</h3>
+      <p id="noticeMessage"></p>
     </div>
   </form>
 </div>
@@ -329,46 +329,67 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
 <script>
 function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
 
-function buildMailBody(){
-  return 'お名前：' + document.getElementById('name').value + '\n' +
-    'メール：' + document.getElementById('email').value + '\n' +
-    '会社名：' + document.getElementById('company').value + '\n' +
-    '電話：' + document.getElementById('tel').value + '\n' +
-    'サービス：' + document.getElementById('service').value + '\n' +
-    '予算：' + document.getElementById('budget').value + '\n\n' +
-    '内容：\n' + document.getElementById('message').value;
+let contactCsrf = '';
+
+async function prepareContactForm(){
+  const response = await fetch('api/contact.php', {credentials:'same-origin'});
+  const data = await response.json();
+  if(!response.ok || !data.success || !data.csrf) throw new Error('受付を準備できません');
+  contactCsrf = data.csrf;
 }
 
-function openMailDraft(event){
+function showContactNotice(success, message){
+  const notice = document.getElementById('mailNotice');
+  document.getElementById('noticeTitle').textContent = success ? '受付しました' : '送信できませんでした';
+  document.getElementById('noticeMessage').textContent = message;
+  notice.style.display = 'block';
+  notice.style.borderColor = success ? 'rgba(0,255,238,0.2)' : 'rgba(255,68,102,0.45)';
+  notice.focus?.();
+}
+
+async function submitContact(event){
   event.preventDefault();
-  const name = document.getElementById('name').value;
-  const email = document.getElementById('email').value;
-  const service = document.getElementById('service').value;
-  const message = document.getElementById('message').value;
-  const agree = document.getElementById('agree').checked;
-  const honeypot = document.getElementById('honeypot').value;
-
-  // ハニーポット：botが入力していたら送信しない
-  if(honeypot){return;}
-
-  if(!document.getElementById('contactForm').reportValidity()) return;
-
-  // メールアプリに下書きを作成する（自動送信ではない）
-  const subject = encodeURIComponent('【RSS7 AI Works】お問い合わせ：' + service);
-  const body = encodeURIComponent(buildMailBody());
-  document.getElementById('mailNotice').style.display = 'block';
-  window.location.href = 'mailto:info@rss7.net?subject=' + subject + '&body=' + body;
+  const form = document.getElementById('contactForm');
+  if(!form.reportValidity()) return;
+  const button = document.getElementById('submitBtn');
+  button.disabled = true;
+  button.textContent = '送信中...';
+  try {
+    if(!contactCsrf) await prepareContactForm();
+    const response = await fetch('api/contact.php', {
+      method:'POST',
+      credentials:'same-origin',
+      headers:{'Content-Type':'application/json','X-CSRF-Token':contactCsrf},
+      body:JSON.stringify({
+        name:document.getElementById('name').value,
+        company:document.getElementById('company').value,
+        email:document.getElementById('email').value,
+        tel:document.getElementById('tel').value,
+        service:document.getElementById('service').value,
+        budget:document.getElementById('budget').value,
+        message:document.getElementById('message').value,
+        website:document.getElementById('website').value,
+        agreed:document.getElementById('agree').checked
+      })
+    });
+    const data = await response.json().catch(()=>({success:false,message:'サーバー応答を確認できませんでした'}));
+    if(!response.ok || !data.success) throw new Error(data.message || '送信できませんでした');
+    form.reset();
+    contactCsrf = '';
+    showContactNotice(true, 'お問い合わせを受け付けました。通常1〜2営業日以内に返信します。');
+    prepareContactForm().catch(()=>{});
+  } catch(error) {
+    showContactNotice(false, (error.message || '送信できませんでした') + ' LINE、または info@rss7.net へ直接お問い合わせください。');
+    contactCsrf = '';
+    prepareContactForm().catch(()=>{});
+  } finally {
+    button.disabled = false;
+    button.textContent = '問い合わせを送信する';
+  }
 }
 
-document.getElementById('contactForm').addEventListener('submit', openMailDraft);
-document.getElementById('copyBtn').addEventListener('click', async ()=>{
-  try {
-    await navigator.clipboard.writeText(buildMailBody());
-    document.getElementById('copyBtn').textContent = 'コピーしました';
-  } catch(e) {
-    alert('コピーできませんでした。内容を選択してコピーしてください。');
-  }
-});
+document.getElementById('contactForm').addEventListener('submit', submitContact);
+prepareContactForm().catch(()=>{});
 
 const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('v'),i*80);});},{threshold:0.05});
 document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
