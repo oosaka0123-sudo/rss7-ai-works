@@ -12,6 +12,21 @@
 6. `data/articles.json` と公開HTMLの互換性を保つ。文字コードはUTF-8を基本とする。
 7. 既存ページのURL、SEO情報、Google確認ファイル、`robots.txt`、`sitemap.xml` を無断で変更しない。
 
+## Chat persistence / knowledge routing
+
+ユーザーから「このチャット内容をリポジトリに保存して」または同等の指示を受けた場合は、生の会話ログを保存せず、確定した重要情報だけをGitHub上の既存正本へ整理して反映する。
+
+- 保存前に現在のdefault branchを正として、`AGENTS.md`、`README.md`、`PROJECT_SPEC.md`、必要な `docs/`、関連Issue / PR / Actionsを再確認する。
+- 確定したサイト構成、公開機能、API構成、既知の不足、運用上の現行制約は `PROJECT_SPEC.md` または責務が明確な既存文書を更新する。
+- GitHub管理対象・非対象や利用者向けの現行案内は `README.md` を更新する。
+- 本番デプロイ、有効化、検証、復旧に関する再利用可能な手順は既存の `docs/PRODUCTION_DEPLOY.md` を正本として更新し、同じ手順を別文書へ複製しない。
+- 長期的に重要な設計判断は必要な場合のみ `DECISIONS.md`、独立した再利用手順が既存文書に収まらない場合のみ `RUNBOOK.md`、未完了作業の追加引き継ぎが本当に必要な場合のみProject既定のファイルまたは `HANDOFF.md` を作成・更新する。形式だけの空ファイルは作らない。
+- Issue / PR / Actions / Commitから復元できる差分、テスト結果、進行履歴は、チャット保存のためだけにMarkdownへ重複保存しない。
+- 現在状態を表す文書はappend-onlyにせず、古い仕様・不足状況・運用状態が現行情報として残らないよう既存記述を更新・整理する。
+- 元ZIP、バックアップ、ログ、サーバー固有設定、未監査コードなど、既存ルールでGitHub管理外とされる内容をチャット保存を理由に追加しない。
+- APIキー、パスワード、メール宛先、FTP情報、Secret、Token、Webhook URL、認証情報などは保存対象から除外し、Issue / PR / Markdownにも転記しない。
+- 保存後は、更新した正本と、履歴重複・機密性などの理由で保存しなかった情報を簡潔に報告する。
+
 ## 推奨ブランチ
 
 - Claude: `feat/claude-archive`
