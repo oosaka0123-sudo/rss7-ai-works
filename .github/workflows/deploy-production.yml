@@ -71,10 +71,14 @@ jobs:
             || { echo "FTP scheme is invalid."; exit 1; }
           [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] \
             || { echo "FTP port is invalid."; exit 1; }
-          [[ "$DEPLOY_DIR" =~ ^/[A-Za-z0-9._/-]+$ && "$DEPLOY_DIR" != "/" ]] \
+          [[ "$DEPLOY_DIR" =~ ^/[A-Za-z0-9._/-]*$ && "$DEPLOY_DIR" != *".."* ]] \
             || { echo "Deployment directory is invalid."; exit 1; }
           [[ "$SITE_URL" =~ ^https://[A-Za-z0-9.-]+/?$ ]] \
             || { echo "Site URL is invalid."; exit 1; }
+          if [[ "$DEPLOY_DIR" == "/" && "${SITE_URL%/}" != "https://rss7.net" ]]; then
+            echo "Root deployment is allowed only for the verified rss7.net production target."
+            exit 1
+          fi
 
       - name: Check out validated revision
         uses: actions/checkout@v4
