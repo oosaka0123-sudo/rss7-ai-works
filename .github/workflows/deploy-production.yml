@@ -40,10 +40,10 @@ jobs:
     needs: [validate-manual]
     if: >-
       always() &&
-      vars.LOLIPOP_DEPLOY_ENABLED == 'true' &&
       ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
       needs.validate-manual.result == 'success') ||
       (github.event_name == 'workflow_run' &&
+      vars.LOLIPOP_AUTO_DEPLOY_ENABLED == 'true' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'))
