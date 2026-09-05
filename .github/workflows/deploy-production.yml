@@ -107,7 +107,7 @@ jobs:
           set ftp:ssl-protect-data true
           open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
           mirror --reverse --verbose=1 --parallel=2 --no-perms \
-            --exclude-rx='(^|/)api/config[.](local|example)[.]php$|(^|/)data/articles[.]json$|(^|/)images/blog/.*[.](jpe?g|png|webp|gif)$|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)[.]gitignore$|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md|README[.]md)$|[.]zip$' \
+            --exclude-rx '(^|/)api/config[.](local|example)[.]php$|(^|/)data/articles[.]json$|(^|/)images/blog/.*[.](jpe?g|png|webp|gif)$|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)[.]gitignore$|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md|README[.]md)$|[.]zip$' \
             ./ "$DEPLOY_DIR"
           bye
           LFTP
