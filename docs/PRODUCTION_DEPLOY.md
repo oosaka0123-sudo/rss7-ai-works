@@ -14,9 +14,11 @@ Variables:
 
 - `LOLIPOP_FTP_SCHEME`: explicit FTPSは `ftp`、implicit FTPSは `ftps`
 - `LOLIPOP_FTP_PORT`: ロリポップ管理画面に表示されたポート
-- `LOLIPOP_DEPLOY_DIR`: `rss7.net` の正確な公開先ディレクトリ（`/`は禁止）
+- `LOLIPOP_DEPLOY_DIR`: `rss7.net` はロリポップの公開（アップロード）フォルダが空欄であることを確認済みのため `/`
 - `LOLIPOP_SITE_URL`: `https://rss7.net`
 - `LOLIPOP_DEPLOY_ENABLED`: 動作確認が終わるまで `false`、本番開始時だけ `true`
+
+`LOLIPOP_DEPLOY_DIR=/` は、`LOLIPOP_SITE_URL=https://rss7.net` の組み合わせでだけ許可します。他ドメインや未確認の公開先へルートデプロイしてはいけません。
 
 ## 有効化前の必須確認
 
