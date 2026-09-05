@@ -86,8 +86,91 @@ jobs:
           ref: ${{ env.DEPLOY_SHA }}
           persist-credentials: false
 
-      - name: Install lftp
-        run: sudo apt-get update && sudo apt-get install -y lftp
+      - name: Install deployment tools
+        run: sudo apt-get update && sudo apt-get install -y lftp php-cli
+
+      - name: Ensure server-only API config exists
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+          RSS7_ADMIN_PASSWORD: ${{ secrets.RSS7_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          remote_api_dir="${DEPLOY_DIR%/}/api"
+          remote_config="$remote_api_dir/config.local.php"
+
+          listing="$(lftp -c "
+            set cmd:fail-exit yes;
+            set net:max-retries 2;
+            set net:timeout 20;
+            set ssl:verify-certificate yes;
+            set ftp:ssl-force true;
+            set ftp:ssl-protect-data true;
+            open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
+            cls -1 \"$remote_api_dir\";
+          ")" || { echo "Could not inspect the production API directory; refusing to create or overwrite server config."; exit 1; }
+
+          if grep -Fxq 'config.local.php' <<< "$listing"; then
+            echo "Existing server-only API config detected; preserving it."
+            exit 0
+          fi
+
+          [[ -n "$RSS7_ADMIN_PASSWORD" ]] \
+            || { echo "Server API config is missing. Add production Environment secret RSS7_ADMIN_PASSWORD, then run the workflow again."; exit 1; }
+          (( ${#RSS7_ADMIN_PASSWORD} >= 12 )) \
+            || { echo "RSS7_ADMIN_PASSWORD must be at least 12 characters."; exit 1; }
+
+          export RSS7_ADMIN_PASSWORD
+          php <<'PHP'
+          <?php
+          $password = getenv('RSS7_ADMIN_PASSWORD');
+          if (!is_string($password) || strlen($password) < 12) {
+              fwrite(STDERR, "Admin password secret is invalid.\n");
+              exit(1);
+          }
+          $hash = password_hash($password, PASSWORD_DEFAULT);
+          if (!is_string($hash) || $hash === '') {
+              fwrite(STDERR, "Could not generate password hash.\n");
+              exit(1);
+          }
+          $rateSecret = bin2hex(random_bytes(32));
+          $config = "<?php\nreturn [\n"
+              . "    'private_data_dir' => dirname(\$_SERVER['DOCUMENT_ROOT']) . '/rss7-private',\n"
+              . "    'contact_recipient' => 'info@rss7.net',\n"
+              . "    'contact_sender' => 'info@rss7.net',\n"
+              . "    'contact_rate_secret' => " . var_export($rateSecret, true) . ",\n"
+              . "    'users' => [\n"
+              . "        'mako' => [\n"
+              . "            'name' => 'MAKO',\n"
+              . "            'password_hash' => " . var_export($hash, true) . ",\n"
+              . "        ],\n"
+              . "    ],\n"
+              . "    'max_upload_bytes' => 5 * 1024 * 1024,\n"
+              . "];\n";
+          if (file_put_contents('/tmp/rss7-config.local.php', $config, LOCK_EX) === false) {
+              fwrite(STDERR, "Could not create temporary server config.\n");
+              exit(1);
+          }
+          PHP
+
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          put "/tmp/rss7-config.local.php" -o "$remote_config"
+          bye
+          LFTP
+
+          rm -f /tmp/rss7-config.local.php
+          unset RSS7_ADMIN_PASSWORD
+          echo "Created missing server-only API config without committing or logging secret values."
 
       - name: Upload validated site
         shell: bash
