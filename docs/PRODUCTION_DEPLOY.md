@@ -12,6 +12,7 @@ Secrets（値を画面やチャットへ貼らない）:
 - `LOLIPOP_FTP_HOST`
 - `LOLIPOP_FTP_USER`
 - `LOLIPOP_FTP_PASSWORD`
+- `RSS7_ADMIN_PASSWORD` — `api/config.local.php` が本番に存在しない初回だけ使用する新しい管理画面パスワード。12文字以上。過去の平文パスワードは再利用しない。
 
 Variables:
 
@@ -22,16 +23,33 @@ Variables:
 
 `LOLIPOP_DEPLOY_DIR=/` は、`LOLIPOP_SITE_URL=https://rss7.net` の組み合わせでだけ許可します。他ドメインや未確認の公開先へルートデプロイしてはいけません。
 
+## 本番API設定の初回ブートストラップ
+
+`api/config.local.php` はGitHubへコミットせず、本番サーバーだけに保持します。
+
+`Deploy production` はFTPで `api/` を確認し、既存の `config.local.php` があれば一切上書きせず、そのまま保護します。存在しない場合だけ `production` Environment secret `RSS7_ADMIN_PASSWORD` を使って一時ファイルを生成し、本番の `api/config.local.php` として1回だけ配置します。
+
+生成時の安全方針:
+
+- 管理パスワードはログへ表示せず、PHP `password_hash()` の結果だけを本番設定へ保存する。
+- `contact_rate_secret` は64文字のランダム値をその場で新規生成する。
+- `private_data_dir` は `dirname($_SERVER['DOCUMENT_ROOT']) . '/rss7-private'` とし、DocumentRootの外側を使う。
+- `contact_recipient` / `contact_sender` は `info@rss7.net` を使う。
+- 生成した一時ファイルはアップロード後にRunnerから削除する。
+- FTPで `api/` を正常に確認できない場合は、既存設定を誤って上書きしないよう失敗終了する。
+
+`RSS7_ADMIN_PASSWORD` が未登録で、かつ本番に `config.local.php` が無い場合は、サイト本体のアップロード前に安全停止します。
+
 ## 手動デプロイ
 
-1. `api/config.example.php` を参考に、本番だけに `api/config.local.php` を作る。過去の平文パスワードは再利用しない。
-2. `private_data_dir` は、すべての `public_html` / DocumentRoot の外側に設定する。
-3. PHP 7.4以上、`mbstring`、`fileinfo`、`DOM` が利用できることを確認する。
-4. `images/blog/` と `private_data_dir` をPHPから書き込めるようにする。
-5. `https://rss7.net/data/articles.json` がHTTP 403になることを確認する。
-6. ロリポップ側の現行 `rss7.net` をバックアップし、公開先ディレクトリと `LOLIPOP_SITE_URL` を再確認する。
-7. GitHub Actionsの `Deploy production` を開き、mainを選んで `Run workflow` を実行する。
-8. 手動実行内の品質検査に合格した場合だけFTP転送へ進む。
+1. `production` Environment に上記Secrets / Variablesを設定する。`RSS7_ADMIN_PASSWORD` は新しい12文字以上の値を使い、チャットやIssueへ貼らない。
+2. PHP 7.4以上、`mbstring`、`fileinfo`、`DOM` が利用できることを確認する。
+3. `images/blog/` と、本番で生成される公開領域外の `rss7-private` をPHPから書き込める必要がある。
+4. ロリポップ側の現行 `rss7.net` をバックアップし、公開先ディレクトリと `LOLIPOP_SITE_URL` を再確認する。
+5. GitHub Actionsの `Deploy production` を開き、mainを選んで `Run workflow` を実行する。
+6. 手動実行内の品質検査に合格した場合だけFTP転送へ進む。
+7. 初回は `config.local.php` の存在確認/必要時ブートストラップ後にサイト本体を転送する。
+8. 公開後の自動確認で、ページ/API/保護ファイルがすべて正常になることを確認する。
 
 手動実行そのものが明示的な本番承認になるため、同名のRepository variableとEnvironment variableを二重登録する必要はありません。
 
