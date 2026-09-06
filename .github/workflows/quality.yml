@@ -19,6 +19,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Validate sitemap lastmod freshness
+        env:
+          SITEMAP_GIT_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: python scripts/sync_sitemap_lastmod.py --check
       - name: Validate public site
         run: python scripts/check_site.py
