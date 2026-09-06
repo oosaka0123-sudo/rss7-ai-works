@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Synchronize sitemap.xml lastmod values with Git history.
 
-Git author dates are the source of truth for page freshness so rebasing a PR
-does not create artificial freshness changes. The blog index also considers
-data/articles.json because its rendered content depends on it.
+The latest author timestamp for each source file is converted to Asia/Tokyo and
+used as the page freshness date. In pull requests, CI passes the actual head
+commit through SITEMAP_GIT_REF so GitHub's synthetic merge commit cannot create
+false freshness changes. The blog index also considers data/articles.json
+because its rendered content depends on it.
 
 Usage:
   python scripts/sync_sitemap_lastmod.py          # rewrite sitemap.xml
@@ -13,22 +15,27 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote, urlparse
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 SITEMAP = ROOT / "sitemap.xml"
 NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
+GIT_REF = os.environ.get("SITEMAP_GIT_REF", "HEAD")
+JST = ZoneInfo("Asia/Tokyo")
 ET.register_namespace("", NS)
 
 
 def git_date(path: Path) -> str:
     rel = path.relative_to(ROOT).as_posix()
     result = subprocess.run(
-        ["git", "log", "-1", "--format=%as", "--", rel],
+        ["git", "log", "-1", "--format=%aI", GIT_REF, "--", rel],
         cwd=ROOT,
         text=True,
         capture_output=True,
@@ -36,8 +43,11 @@ def git_date(path: Path) -> str:
     )
     value = result.stdout.strip()
     if not value:
-        raise RuntimeError(f"Git history date not found: {rel}")
-    return value
+        raise RuntimeError(f"Git history timestamp not found: {rel} at {GIT_REF}")
+    try:
+        return datetime.fromisoformat(value).astimezone(JST).date().isoformat()
+    except ValueError as exc:
+        raise RuntimeError(f"Invalid Git author timestamp for {rel}: {value}") from exc
 
 
 def source_paths_for_url(url: str) -> list[Path]:
@@ -91,7 +101,7 @@ def synchronize(check_only: bool) -> int:
                 print(f"OUTDATED: {url} lastmod={current or '(missing)'} expected={expected}", file=sys.stderr)
             print(f"FAILED: sitemap lastmod mismatch {len(mismatches)}件", file=sys.stderr)
             return 1
-        print("OK: sitemap lastmod is synchronized with Git author history")
+        print(f"OK: sitemap lastmod is synchronized with Git author history at {GIT_REF}")
         return 0
 
     write_sitemap(root)
