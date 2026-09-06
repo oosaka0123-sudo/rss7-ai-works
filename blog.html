@@ -95,6 +95,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;displa
 .modal-title{font-size:1.3rem;color:var(--white);line-height:1.5;margin-bottom:25px;font-weight:400;}
 .modal-body{font-size:0.88rem;color:var(--gray);line-height:2;font-weight:300;}
 .modal-body p{margin-bottom:18px;}
+.modal-actions{margin-top:28px;padding-top:22px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;}
+.modal-action{display:inline-block;padding:11px 16px;border:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:0.75rem;font-weight:700;transition:all 0.3s;}
+.modal-action:hover{border-color:var(--blue);background:rgba(0,170,255,0.06);}
+.modal-action.primary{background:var(--blue);color:#020408;border-color:var(--blue);}
+.modal-action.primary:hover{background:var(--cyan);border-color:var(--cyan);}
 
 /* ブランドリンク */
 .brand-links{max-width:1100px;margin:0 auto;padding:0 30px 60px;display:grid;grid-template-columns:1fr 1fr;gap:15px;}
@@ -275,6 +280,10 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
       </div>
       <h2 class="modal-title" id="modalTitle"></h2>
       <div class="modal-body" id="modalBody"></div>
+      <div class="modal-actions" id="modalActions">
+        <a class="modal-action" id="relatedServiceLink" href="services.html">関連サービスを見る</a>
+        <a class="modal-action primary" id="consultServiceLink" href="contact.html">この内容を相談する</a>
+      </div>
     </div>
   </div>
 </div>
@@ -516,6 +525,27 @@ function filterCat(cat, btn){
   renderTagCloud();
 }
 
+const serviceByCategory = {
+  AI:{anchor:'ai-consulting',service:'AI導入コンサルティング'},
+  WEB:{anchor:'web-development',service:'WEB制作'},
+  VIDEO:{anchor:'ai-video',service:'AI動画CM制作'},
+  SNS:{anchor:'sns-management',service:'SNS運用代行'}
+};
+
+function updateArticleActions(article){
+  const config = serviceByCategory[article?.cat] || null;
+  const serviceLink = document.getElementById('relatedServiceLink');
+  const consultLink = document.getElementById('consultServiceLink');
+  if(!serviceLink || !consultLink) return;
+  if(config){
+    serviceLink.href = `services.html#${config.anchor}`;
+    consultLink.href = `contact.html?service=${encodeURIComponent(config.service)}`;
+  } else {
+    serviceLink.href = 'services.html';
+    consultLink.href = 'contact.html';
+  }
+}
+
 function openModal(id){
   const a = articles.find(x=>String(x.id)===String(id));
   if(!a) return;
@@ -527,6 +557,7 @@ function openModal(id){
   document.getElementById('modalDate').textContent = a.date;
   document.getElementById('modalTitle').textContent = a.title;
   document.getElementById('modalBody').innerHTML = sanitizeArticleHTML(a.body);
+  updateArticleActions(a);
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
