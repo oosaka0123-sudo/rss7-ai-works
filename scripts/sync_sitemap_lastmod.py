@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Synchronize sitemap.xml lastmod values with Git history.
 
+Git commit dates are the source of truth for page freshness. The blog index
+also considers data/articles.json because its rendered content depends on it.
+
 Usage:
   python scripts/sync_sitemap_lastmod.py          # rewrite sitemap.xml
   python scripts/sync_sitemap_lastmod.py --check  # fail when out of sync
