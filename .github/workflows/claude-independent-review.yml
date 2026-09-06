@@ -82,4 +82,4 @@ jobs:
             GO / NO-GO
 
             If evidence is insufficient, say exactly what is missing and stop. Do not invent success.
-          claude_args: '--max-turns 12 --allowed-tools "Bash"'
+          claude_args: '--model sonnet --max-turns 12 --allowed-tools "Bash"'
