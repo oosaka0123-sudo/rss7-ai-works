@@ -47,8 +47,8 @@ jobs:
           text = services.read_text(encoding='utf-8')
           ids = ['web-development', 'app-development', 'ai-video', 'ai-consulting']
           for service_id in ids:
-              old = '<div class="service-detail">'
-              new = f'<div class="service-detail" id="{service_id}">'
+              old = '<div class="service-detail fi">'
+              new = f'<div class="service-detail fi" id="{service_id}">'
               if old not in text:
                   raise SystemExit(f'service detail pattern missing before {service_id}')
               text = text.replace(old, new, 1)
