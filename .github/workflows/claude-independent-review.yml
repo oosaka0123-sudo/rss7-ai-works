@@ -54,32 +54,25 @@ jobs:
           prompt: |-
             You are Claude Code acting strictly as an independent reviewer for the RSS7 AI Works GitHub Issue that received the triggering @claude-review comment.
 
-            ANALYSIS-ONLY MODE is mandatory for this workflow.
+            ANALYSIS-ONLY MODE is mandatory.
             - Do not create, modify, move, or delete repository files.
             - Do not create or modify branches, commits, pull requests, releases, deployments, Secrets, Variables, environments, or server files.
             - Do not trigger or re-run production deployment.
             - Do not expose or request secret values.
 
-            Before reviewing:
-            1. Read the target Issue body and all current comments.
-            2. Read AGENTS.md, PROJECT_SPEC.md, README.md, docs/PRODUCTION_DEPLOY.md, and .github/workflows/deploy-production.yml.
-            3. Inspect the current default branch state and relevant recent pull requests/commits referenced by the Issue, especially any fix already merged after the failing deployment.
-            4. Treat GitHub current state as SSOT. Separate OBSERVED facts from HYPOTHESIS.
+            Review the CURRENT TRIGGERING ISSUE, not a previously reviewed issue.
+            1. Read the triggering Issue title, body, and all current comments, including the owner's @claude-review instructions.
+            2. Read AGENTS.md, PROJECT_SPEC.md, README.md, and only the project files/workflows relevant to that Issue.
+            3. Inspect current main and relevant recent PRs/commits when they materially affect the Issue.
+            4. Treat current GitHub state as SSOT and separate OBSERVED facts from HYPOTHESIS.
+            5. Focus only on the scope and priorities requested by the triggering Issue/comment. Do not reuse a hard-coded production-deploy review checklist unless the triggering Issue is actually about production deployment.
 
-            Review goals:
-            - Determine whether the HTTP 503 diagnosis is supported by the current code and deployment evidence.
-            - Review the current recovery design, including server-only api/config.local.php handling, private_data_dir placement, contact settings, and any bootstrap logic recently merged.
-            - Compare manual server configuration versus GitHub Actions Secret-based bootstrap for security, reproducibility, rollback, and operator simplicity.
-            - Reassess WAF, PHP version/extensions, .htaccess, permissions, and hosting-specific risks without guessing.
-            - Identify any security or operational issue that should block the next production run.
-            - Produce one recommended one-shot recovery path with preflight checks and a clear stop condition.
-
-            Post the result to the triggering Issue using these headings:
+            Post a concise, actionable review to the triggering Issue using these headings:
             OBSERVED
             ASSESSMENT
             RISKS / BLOCKERS
-            RECOMMENDED ONE-SHOT PLAN
+            MINIMAL FIX PLAN
             GO / NO-GO
 
-            If evidence is insufficient, say exactly what is missing and stop. Do not invent success.
-          claude_args: '--model sonnet --max-turns 12 --allowed-tools "Bash"'
+            If evidence is insufficient, say exactly what is missing. Do not invent success or unrelated tasks.
+          claude_args: '--model sonnet --max-turns 24 --allowed-tools "Bash"'
