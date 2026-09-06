@@ -1,0 +1,66 @@
+name: One-shot contact LINE CTA updater
+
+on:
+  push:
+    branches: [ux/contact-inline-line-cta]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[line-cta-complete]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ux/contact-inline-line-cta
+      - name: Add visible LINE consultation CTA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('contact.html')
+          text = path.read_text(encoding='utf-8')
+
+          css_anchor = '.contact-form{background:var(--bg2);border:1px solid var(--border);padding:50px 40px;}'
+          css = '''.contact-choice{margin-bottom:24px;border:1px solid rgba(6,199,85,0.25);background:rgba(6,199,85,0.05);padding:22px;text-align:center;}
+          .contact-choice p{font-size:0.82rem;color:var(--gray);line-height:1.8;margin-bottom:14px;}
+          .line-inline-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;background:#06C755;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:700;border-radius:4px;transition:transform 0.2s ease,background 0.2s ease;}
+          .line-inline-btn:hover{background:#00B900;transform:translateY(-1px);}
+
+          '''
+          if '.contact-choice{' not in text:
+              if css_anchor not in text:
+                  raise SystemExit('CSS anchor not found')
+              text = text.replace(css_anchor, css + css_anchor, 1)
+
+          form_anchor = '  <form class="contact-form fi" id="contactForm" novalidate>'
+          block = '''  <div class="contact-choice fi">
+            <p>フォームでもLINEでもご相談いただけます。入力よりLINEが便利な場合はこちらからどうぞ。</p>
+            <a href="https://lin.ee/RjoCIMX" target="_blank" rel="noopener" class="line-inline-btn" aria-label="LINEで無料相談">LINEで無料相談</a>
+          </div>
+
+'''
+          if 'class="contact-choice fi"' not in text:
+              if form_anchor not in text:
+                  raise SystemExit('Form anchor not found')
+              text = text.replace(form_anchor, block + form_anchor, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+          python scripts/sync_sitemap_lastmod.py
+          python scripts/sync_sitemap_lastmod.py --check
+          python scripts/check_site.py
+          python scripts/check_service_contact_contract.py
+          node scripts/check_inline_js.mjs
+          git diff --check
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm .github/workflows/one-shot-contact-line-cta.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add contact.html sitemap.xml .github/workflows/one-shot-contact-line-cta.yml
+          git commit -m "feat: add visible LINE consultation CTA [line-cta-complete]"
+          git push origin ux/contact-inline-line-cta
