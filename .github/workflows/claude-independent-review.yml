@@ -1,0 +1,85 @@
+name: Claude Independent Issue Review
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  id-token: write
+
+concurrency:
+  group: claude-independent-review-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  claude-review:
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.event.action == 'created' &&
+        github.event.comment.author_association == 'OWNER' &&
+        github.event.comment.user.type != 'Bot' &&
+        contains(github.event.comment.body, '@claude-review')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check Anthropic authentication availability
+        env:
+          HAS_API_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          HAS_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          if [ "$HAS_API_KEY" != "true" ] && [ "$HAS_OAUTH_TOKEN" != "true" ]; then
+            echo "::error::Claude authentication is not configured for this repository. Configure either ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN as a GitHub Actions secret before triggering @claude-review."
+            exit 1
+          fi
+          echo "A supported Claude authentication method is configured. Secret values are not printed."
+
+      - name: Run Claude independent review
+        uses: anthropics/claude-code-action@ef8bb1e43bf303cff727a1dd0b8837029fe982a2
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |-
+            You are Claude Code acting strictly as an independent reviewer for the RSS7 AI Works GitHub Issue that received the triggering @claude-review comment.
+
+            ANALYSIS-ONLY MODE is mandatory for this workflow.
+            - Do not create, modify, move, or delete repository files.
+            - Do not create or modify branches, commits, pull requests, releases, deployments, Secrets, Variables, environments, or server files.
+            - Do not trigger or re-run production deployment.
+            - Do not expose or request secret values.
+
+            Before reviewing:
+            1. Read the target Issue body and all current comments.
+            2. Read AGENTS.md, PROJECT_SPEC.md, README.md, docs/PRODUCTION_DEPLOY.md, and .github/workflows/deploy-production.yml.
+            3. Inspect the current default branch state and relevant recent pull requests/commits referenced by the Issue, especially any fix already merged after the failing deployment.
+            4. Treat GitHub current state as SSOT. Separate OBSERVED facts from HYPOTHESIS.
+
+            Review goals:
+            - Determine whether the HTTP 503 diagnosis is supported by the current code and deployment evidence.
+            - Review the current recovery design, including server-only api/config.local.php handling, private_data_dir placement, contact settings, and any bootstrap logic recently merged.
+            - Compare manual server configuration versus GitHub Actions Secret-based bootstrap for security, reproducibility, rollback, and operator simplicity.
+            - Reassess WAF, PHP version/extensions, .htaccess, permissions, and hosting-specific risks without guessing.
+            - Identify any security or operational issue that should block the next production run.
+            - Produce one recommended one-shot recovery path with preflight checks and a clear stop condition.
+
+            Post the result to the triggering Issue using these headings:
+            OBSERVED
+            ASSESSMENT
+            RISKS / BLOCKERS
+            RECOMMENDED ONE-SHOT PLAN
+            GO / NO-GO
+
+            If evidence is insufficient, say exactly what is missing and stop. Do not invent success.
+          claude_args: '--max-turns 12 --allowed-tools "Bash"'
