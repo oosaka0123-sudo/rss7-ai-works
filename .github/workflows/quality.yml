@@ -24,6 +24,8 @@ jobs:
         run: python scripts/sync_sitemap_lastmod.py --check
       - name: Validate public site
         run: python scripts/check_site.py
+      - name: Validate service-to-contact contract
+        run: python scripts/check_service_contact_contract.py
       - name: Validate inline JavaScript syntax
         run: node scripts/check_inline_js.mjs
       - name: Validate PHP syntax
