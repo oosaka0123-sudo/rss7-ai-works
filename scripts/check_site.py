@@ -145,6 +145,17 @@ def check_html() -> None:
             error(f"{page}: canonicalが不一致です")
         if 'content="https://rss7.net/images/og-image.jpg"' not in text:
             error(f"{page}: og:imageがありません")
+        if not re.search(r"<title>\s*[^<]+\s*</title>", text, flags=re.I):
+            error(f"{page}: titleがありません")
+        if not re.search(r'<meta\s+name=["\']description["\']\s+content=["\'][^"\']+["\']', text, flags=re.I):
+            error(f"{page}: meta descriptionがありません")
+        if not re.search(r'<meta\s+name=["\']robots["\']\s+content=["\'][^"\']+["\']', text, flags=re.I):
+            error(f"{page}: robots metaがありません")
+        for prop in ("og:title", "og:description", "og:type"):
+            if not re.search(rf'<meta\s+property=["\']{re.escape(prop)}["\']\s+content=["\'][^"\']+["\']', text, flags=re.I):
+                error(f"{page}: {prop} がありません")
+        if f'<meta property="og:url" content="{canonical}"' not in text:
+            error(f"{page}: og:urlが不一致です")
         menu_buttons = re.findall(r"<button\b[^>]*\bclass=[\"'][^\"']*\bmenu-btn\b[^\"']*[\"'][^>]*>", text, flags=re.I)
         for button in menu_buttons:
             if not re.search(r"\baria-label=[\"'][^\"']+[\"']", button, flags=re.I):
