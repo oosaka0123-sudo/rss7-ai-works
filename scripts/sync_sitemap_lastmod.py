@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Synchronize sitemap.xml lastmod values with Git history.
 
-Git commit dates are the source of truth for page freshness. The blog index
-also considers data/articles.json because its rendered content depends on it.
+Git author dates are the source of truth for page freshness so rebasing a PR
+does not create artificial freshness changes. The blog index also considers
+data/articles.json because its rendered content depends on it.
 
 Usage:
   python scripts/sync_sitemap_lastmod.py          # rewrite sitemap.xml
@@ -27,7 +28,7 @@ ET.register_namespace("", NS)
 def git_date(path: Path) -> str:
     rel = path.relative_to(ROOT).as_posix()
     result = subprocess.run(
-        ["git", "log", "-1", "--format=%cs", "--", rel],
+        ["git", "log", "-1", "--format=%as", "--", rel],
         cwd=ROOT,
         text=True,
         capture_output=True,
@@ -90,7 +91,7 @@ def synchronize(check_only: bool) -> int:
                 print(f"OUTDATED: {url} lastmod={current or '(missing)'} expected={expected}", file=sys.stderr)
             print(f"FAILED: sitemap lastmod mismatch {len(mismatches)}件", file=sys.stderr)
             return 1
-        print("OK: sitemap lastmod is synchronized with Git history")
+        print("OK: sitemap lastmod is synchronized with Git author history")
         return 0
 
     write_sitemap(root)
