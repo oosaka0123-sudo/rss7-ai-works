@@ -329,6 +329,17 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
 <script>
 function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
 
+function applyServiceFromQuery(){
+  const requested = new URLSearchParams(window.location.search).get('service');
+  if(!requested) return;
+  const select = document.getElementById('service');
+  if(!select) return;
+  const allowed = Array.from(select.options).some(option => option.value === requested);
+  if(allowed) select.value = requested;
+}
+
+applyServiceFromQuery();
+
 let contactCsrf = '';
 
 async function prepareContactForm(){
