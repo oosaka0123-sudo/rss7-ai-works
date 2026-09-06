@@ -186,7 +186,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
     <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
     <a href="https://kiseki.rss7.net" class="nav-link">軌跡</a>
   </nav>
-  <button class="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  <button class="menu-btn" onclick="toggleMenu();this.setAttribute('aria-expanded',document.getElementById('mobileMenu').classList.contains('open')?'true':'false')" aria-label="メニュー" aria-controls="mobileMenu" aria-expanded="false"><span></span><span></span><span></span></button>
 </header>
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html" class="nav-link">TOP</a>
