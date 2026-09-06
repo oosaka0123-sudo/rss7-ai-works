@@ -2,10 +2,11 @@
 """Synchronize sitemap.xml lastmod values with Git history.
 
 The latest author timestamp for each source file is converted to Asia/Tokyo and
-used as the page freshness date. In pull requests, CI passes the actual head
-commit through SITEMAP_GIT_REF so GitHub's synthetic merge commit cannot create
-false freshness changes. The blog index also considers data/articles.json
-because its rendered content depends on it.
+used as the page freshness date. Asia/Tokyo is the public site's operating
+timezone. In pull requests, CI passes the actual head commit through
+SITEMAP_GIT_REF so GitHub's synthetic merge commit cannot create false
+freshness changes. The blog index also considers data/articles.json because
+its rendered content depends on it.
 
 Usage:
   python scripts/sync_sitemap_lastmod.py          # rewrite sitemap.xml
