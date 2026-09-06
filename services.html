@@ -52,7 +52,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;displa
 .s-title{font-family:'Orbitron',monospace;font-size:clamp(1.8rem,4vw,3rem);font-weight:700;letter-spacing:0.05em;margin-bottom:15px;}
 .s-desc{font-size:0.88rem;color:var(--gray);line-height:1.9;max-width:480px;font-weight:300;margin-bottom:50px;}
 
-.service-detail{margin-bottom:80px;}
+.service-detail{margin-bottom:80px;scroll-margin-top:100px;}
 .sd-header{display:flex;align-items:center;gap:20px;margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid var(--border);}
 .sd-num{font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;color:rgba(0,170,255,0.15);line-height:1;}
 .sd-icon{font-size:2.5rem;}
@@ -188,7 +188,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
     <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
     <a href="https://kiseki.rss7.net" class="nav-link">軌跡</a>
   </nav>
-  <button class="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  <button class="menu-btn" onclick="toggleMenu();this.setAttribute('aria-expanded',document.getElementById('mobileMenu').classList.contains('open')?'true':'false')" aria-label="メニュー" aria-controls="mobileMenu" aria-expanded="false"><span></span><span></span><span></span></button>
 </header>
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html" class="nav-link">TOP</a>
@@ -208,7 +208,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
 
 <div class="section">
   <!-- 01 WEB制作 -->
-  <div class="service-detail fi">
+  <div class="service-detail fi" id="web-development">
     <div class="sd-header">
       <div class="sd-num">01</div>
       <div class="sd-icon">🌐</div>
@@ -239,7 +239,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
   <div class="divider"></div>
 
   <!-- 02 アプリ開発 -->
-  <div class="service-detail fi">
+  <div class="service-detail fi" id="app-development">
     <div class="sd-header">
       <div class="sd-num">02</div>
       <div class="sd-icon">📱</div>
@@ -270,7 +270,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
   <div class="divider"></div>
 
   <!-- 03 AI動画CM -->
-  <div class="service-detail fi">
+  <div class="service-detail fi" id="ai-video">
     <div class="sd-header">
       <div class="sd-num">03</div>
       <div class="sd-icon">🎬</div>
@@ -301,7 +301,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
   <div class="divider"></div>
 
   <!-- 04 AI導入コンサル -->
-  <div class="service-detail fi">
+  <div class="service-detail fi" id="ai-consulting">
     <div class="sd-header">
       <div class="sd-num">04</div>
       <div class="sd-icon">🤖</div>
