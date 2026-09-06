@@ -11,6 +11,7 @@
 5. 本番サーバーへ全同期や削除同期を行わない。公開は明示されたファイルだけを対象にする。
 6. `data/articles.json` と公開HTMLの互換性を保つ。文字コードはUTF-8を基本とする。
 7. 既存ページのURL、SEO情報、Google確認ファイル、`robots.txt`、`sitemap.xml` を無断で変更しない。
+8. AnthropicのClaude API / Claude Code Actionを従量課金で使う場合は、モデルを未指定にせず `sonnet` を明示する。Opusはユーザーが明示指定した場合だけ使用する。独立レビューは重要変更へ選択的に使い、軽微な修正では原則呼び出さない。
 
 ## Chat persistence / knowledge routing
 
