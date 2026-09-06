@@ -13,9 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Validate sitemap lastmod freshness
+        run: python scripts/sync_sitemap_lastmod.py --check
       - name: Validate public site
         run: python scripts/check_site.py
       - name: Validate inline JavaScript syntax
