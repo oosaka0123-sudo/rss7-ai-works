@@ -121,6 +121,8 @@ def check_html() -> None:
         parser = ReferenceParser()
         parser.feed(text)
         for reference in parser.references:
+            if reference.strip() == "#":
+                WARNINGS.append(f"{relative_path}: プレースホルダーリンク href=\"#\" があります")
             clean = unquote(reference.split("#", 1)[0].split("?", 1)[0].strip())
             if not clean or clean.startswith(("http://", "https://", "mailto:", "tel:", "data:", "javascript:")):
                 continue
@@ -143,6 +145,14 @@ def check_html() -> None:
             error(f"{page}: canonicalが不一致です")
         if 'content="https://rss7.net/images/og-image.jpg"' not in text:
             error(f"{page}: og:imageがありません")
+        menu_buttons = re.findall(r"<button\b[^>]*\bclass=[\"'][^\"']*\bmenu-btn\b[^\"']*[\"'][^>]*>", text, flags=re.I)
+        for button in menu_buttons:
+            if not re.search(r"\baria-label=[\"'][^\"']+[\"']", button, flags=re.I):
+                WARNINGS.append(f"{page}: menu-btn に aria-label がありません")
+            if not re.search(r"\baria-controls=[\"'][^\"']+[\"']", button, flags=re.I):
+                WARNINGS.append(f"{page}: menu-btn に aria-controls がありません")
+            if not re.search(r"\baria-expanded=[\"'](?:true|false)[\"']", button, flags=re.I):
+                WARNINGS.append(f"{page}: menu-btn に aria-expanded がありません")
 
 
 def check_files() -> None:
