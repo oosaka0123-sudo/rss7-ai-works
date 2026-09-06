@@ -1,0 +1,94 @@
+name: One-shot services process FAQ updater
+
+on:
+  push:
+    branches: [ux/services-process-faq]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[faq-complete]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ux/services-process-faq
+      - name: Add process and FAQ
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('services.html')
+          text = path.read_text(encoding='utf-8')
+
+          css_anchor = '.cta-bar{width:100vw;'
+          css = '''/* ご相談から納品まで / FAQ */
+          .trust-section{padding:70px 30px;max-width:1100px;margin:0 auto;}
+          .trust-title{font-family:'Orbitron',monospace;font-size:clamp(1.5rem,4vw,2.3rem);font-weight:700;letter-spacing:0.05em;margin-bottom:12px;}
+          .trust-lead{font-size:0.86rem;color:var(--gray);line-height:1.9;margin-bottom:32px;max-width:680px;}
+          .process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:55px;}
+          .process-card{border:1px solid var(--border);background:var(--bg2);padding:24px 20px;}
+          .process-card .num{font-family:'Orbitron',monospace;color:var(--blue);font-size:0.7rem;letter-spacing:0.15em;display:block;margin-bottom:10px;}
+          .process-card h3{font-size:0.9rem;margin-bottom:9px;color:var(--white);}
+          .process-card p{font-size:0.78rem;line-height:1.8;color:var(--gray);}
+          .faq-list{display:grid;gap:10px;}
+          .faq-item{border:1px solid var(--border);background:var(--bg2);padding:20px 22px;}
+          .faq-item h3{font-size:0.86rem;color:var(--white);margin-bottom:8px;}
+          .faq-item h3::before{content:'Q. ';color:var(--cyan);font-family:'Share Tech Mono',monospace;}
+          .faq-item p{font-size:0.8rem;color:var(--gray);line-height:1.8;}
+          @media(max-width:800px){.process-grid{grid-template-columns:1fr 1fr;}}
+          @media(max-width:520px){.process-grid{grid-template-columns:1fr;}.trust-section{padding:55px 20px;}}
+
+          '''
+          if '/* ご相談から納品まで / FAQ */' not in text:
+              if css_anchor not in text:
+                  raise SystemExit('CSS anchor not found')
+              text = text.replace(css_anchor, css + css_anchor, 1)
+
+          html_anchor = '<div class="cta-bar fi">'
+          block = '''<section class="trust-section fi" aria-labelledby="process-title">
+            <span class="s-label">HOW WE WORK</span>
+            <h2 class="trust-title" id="process-title">ご相談から納品まで</h2>
+            <p class="trust-lead">まずはご要望を伺い、制作内容と見積もりをご確認いただいてから進めます。</p>
+            <div class="process-grid">
+              <div class="process-card"><span class="num">STEP 01</span><h3>ヒアリング</h3><p>目的・ご要望・現在のお悩みを伺います。</p></div>
+              <div class="process-card"><span class="num">STEP 02</span><h3>プラン・見積もり</h3><p>ヒアリング内容をもとに制作プランと見積もりをご提示。ご納得いただいてからスタートします。</p></div>
+              <div class="process-card"><span class="num">STEP 03</span><h3>制作・確認</h3><p>AIと最新技術を活用して制作を進め、進捗を共有しながら修正にも柔軟に対応します。</p></div>
+              <div class="process-card"><span class="num">STEP 04</span><h3>納品・サポート</h3><p>確認できた成果物を納品し、必要に応じて運用・更新・改善もサポートします。</p></div>
+            </div>
+
+            <span class="s-label">FAQ</span>
+            <h2 class="trust-title">よくあるご質問</h2>
+            <div class="faq-list">
+              <div class="faq-item"><h3>相談だけでも大丈夫ですか？</h3><p>はい。無料相談を受け付けています。まずは内容をお聞かせください。</p></div>
+              <div class="faq-item"><h3>相談したらすぐ制作が始まりますか？</h3><p>ヒアリング後に制作プランと見積もりをご提示し、ご納得いただいてから制作を始めます。</p></div>
+              <div class="faq-item"><h3>納期はどれくらいですか？</h3><p>各サービス欄に目安を掲載しています。内容や規模によって変わるため、具体的な日程はご相談時に確認します。</p></div>
+              <div class="faq-item"><h3>修正はお願いできますか？</h3><p>制作中は進捗を共有し、修正にも柔軟に対応します。具体的な範囲や回数は制作内容に応じて確認します。</p></div>
+              <div class="faq-item"><h3>複数のサービスをまとめて相談できますか？</h3><p>はい。お問い合わせフォームの「その他・複数サービス」からまとめてご相談いただけます。</p></div>
+            </div>
+          </section>
+
+          '''
+          if 'id="process-title"' not in text:
+              if html_anchor not in text:
+                  raise SystemExit('HTML anchor not found')
+              text = text.replace(html_anchor, block + html_anchor, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+          python scripts/sync_sitemap_lastmod.py
+          python scripts/sync_sitemap_lastmod.py --check
+          python scripts/check_site.py
+          node scripts/check_inline_js.mjs
+          git diff --check
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm .github/workflows/one-shot-services-process-faq.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services.html sitemap.xml .github/workflows/one-shot-services-process-faq.yml
+          git commit -m "feat: add service process and FAQ [faq-complete]"
+          git push origin ux/services-process-faq
