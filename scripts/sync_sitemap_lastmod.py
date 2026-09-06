@@ -2,7 +2,7 @@
 """Synchronize sitemap.xml lastmod values with Git history.
 
 Usage:
-  python scripts/sync_sitemap_lastmod.py        # rewrite sitemap.xml
+  python scripts/sync_sitemap_lastmod.py          # rewrite sitemap.xml
   python scripts/sync_sitemap_lastmod.py --check  # fail when out of sync
 """
 
@@ -53,6 +53,14 @@ def expected_lastmod(url: str) -> str:
     return max(git_date(path) for path in paths)
 
 
+def write_sitemap(root: ET.Element) -> None:
+    body = ET.tostring(root, encoding="unicode", short_empty_elements=True)
+    SITEMAP.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n' + body + '\n',
+        encoding="utf-8",
+    )
+
+
 def synchronize(check_only: bool) -> int:
     tree = ET.parse(SITEMAP)
     root = tree.getroot()
@@ -82,11 +90,11 @@ def synchronize(check_only: bool) -> int:
         print("OK: sitemap lastmod is synchronized with Git history")
         return 0
 
+    write_sitemap(root)
     if mismatches:
-        tree.write(SITEMAP, encoding="utf-8", xml_declaration=True, short_empty_elements=True)
         print(f"UPDATED: sitemap.xml lastmod {len(mismatches)}件")
     else:
-        print("OK: sitemap.xml already synchronized")
+        print("OK: sitemap.xml already synchronized; formatting normalized")
     return 0
 
 
