@@ -1,0 +1,102 @@
+name: One-shot service contact flow updater
+
+on:
+  push:
+    branches: [ux/service-contact-prefill]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/service-contact-prefill
+          fetch-depth: 0
+      - name: Improve service-to-contact flow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          from urllib.parse import quote
+
+          services_path = Path('services.html')
+          contact_path = Path('contact.html')
+          services = services_path.read_text(encoding='utf-8')
+          contact = contact_path.read_text(encoding='utf-8')
+
+          # Add CTA styling once.
+          needle = ".sd-price span{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;color:var(--cyan);}\n"
+          addition = needle + ".service-consult{display:inline-block;margin-top:14px;font-size:0.78rem;font-weight:700;color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(0,255,238,0.45);padding-bottom:3px;}\n.service-consult:hover{color:var(--white);border-color:var(--white);}\n"
+          if '.service-consult{' not in services:
+              if needle not in services:
+                  raise SystemExit('service price style anchor not found')
+              services = services.replace(needle, addition, 1)
+
+          # Stable ids for services 05-08.
+          id_map = {
+              '05': 'memory-video',
+              '06': 'sns-management',
+              '07': 'ai-music',
+              '08': 'line-newsletter',
+          }
+          for num, sid in id_map.items():
+              pattern = rf'<div class="service-detail fi">(\s*<div class="sd-header">\s*<div class="sd-num">{num}</div>)'
+              services, count = re.subn(pattern, rf'<div class="service-detail fi" id="{sid}">\1', services, count=1)
+              if count != 1 and f'id="{sid}"' not in services:
+                  raise SystemExit(f'failed to add service id: {num}')
+
+          service_names = [
+              'WEB制作',
+              'アプリ開発',
+              'AI動画CM制作',
+              'AI導入コンサルティング',
+              '自分史・終活ビデオ',
+              'SNS運用代行',
+              'AI楽曲制作',
+              'LINE公式・メルマガ設定',
+          ]
+
+          # Add one CTA to each service text block, directly after its price.
+          for name in service_names:
+              if f'contact.html?service={quote(name)}' in services:
+                  continue
+              heading_pos = services.find(f'<h2>{name}</h2>')
+              if heading_pos < 0:
+                  raise SystemExit(f'service heading not found: {name}')
+              price_start = services.find('<div class="sd-price">', heading_pos)
+              price_end = services.find('</div>', price_start)
+              if price_start < 0 or price_end < 0:
+                  raise SystemExit(f'price block not found: {name}')
+              insert_at = price_end + len('</div>')
+              cta = f'\n        <a class="service-consult" href="contact.html?service={quote(name)}">このサービスを相談する →</a>'
+              services = services[:insert_at] + cta + services[insert_at:]
+
+          # Contact form: safely preselect only a value that already exists in the select.
+          marker = "function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}\n"
+          prefill = marker + "\nfunction applyServiceFromQuery(){\n  const requested = new URLSearchParams(window.location.search).get('service');\n  if(!requested) return;\n  const select = document.getElementById('service');\n  if(!select) return;\n  const allowed = Array.from(select.options).some(option => option.value === requested);\n  if(allowed) select.value = requested;\n}\n\napplyServiceFromQuery();\n"
+          if 'function applyServiceFromQuery()' not in contact:
+              if marker not in contact:
+                  raise SystemExit('contact script marker not found')
+              contact = contact.replace(marker, prefill, 1)
+
+          services_path.write_text(services, encoding='utf-8')
+          contact_path.write_text(contact, encoding='utf-8')
+          PY
+
+          python scripts/sync_sitemap_lastmod.py
+          python scripts/sync_sitemap_lastmod.py --check
+          python scripts/check_site.py
+          node scripts/check_inline_js.mjs
+          git diff --check
+
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm .github/workflows/one-shot-service-contact-prefill.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services.html contact.html sitemap.xml .github/workflows/one-shot-service-contact-prefill.yml
+          git commit -m "feat: connect services to preselected consultation form"
+          git push origin HEAD:ux/service-contact-prefill
