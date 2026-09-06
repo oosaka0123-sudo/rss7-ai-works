@@ -1,0 +1,52 @@
+name: One-shot main page menu ARIA fix
+
+on:
+  push:
+    branches:
+      - fix/menu-aria-main-pages
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/menu-aria-main-pages
+      - name: Normalize menu accessibility
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          files = ['about.html', 'privacy.html', 'contact.html', 'blog.html']
+          variants = [
+              '<button class="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></button>',
+              '<button class="menu-btn" onclick="toggleMenu()" aria-label="メニュー" aria-expanded="false"><span></span><span></span><span></span></button>',
+          ]
+          replacement = '<button class="menu-btn" onclick="toggleMenu();this.setAttribute(\'aria-expanded\',document.getElementById(\'mobileMenu\').classList.contains(\'open\')?\'true\':\'false\')" aria-label="メニュー" aria-controls="mobileMenu" aria-expanded="false"><span></span><span></span><span></span></button>'
+
+          for name in files:
+              path = Path(name)
+              text = path.read_text(encoding='utf-8')
+              matched = False
+              for old in variants:
+                  if old in text:
+                      text = text.replace(old, replacement, 1)
+                      matched = True
+                      break
+              if not matched:
+                  raise SystemExit(f'menu button pattern not found in {name}')
+              path.write_text(text, encoding='utf-8')
+          PY
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm .github/workflows/one-shot-menu-aria.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add about.html privacy.html contact.html blog.html .github/workflows/one-shot-menu-aria.yml
+          git diff --cached --check
+          git commit -m "fix: normalize menu accessibility on main pages"
+          git push origin HEAD:fix/menu-aria-main-pages
