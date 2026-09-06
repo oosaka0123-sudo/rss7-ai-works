@@ -1,0 +1,70 @@
+name: One-shot blog conversion updater
+
+on:
+  push:
+    branches: [ux/blog-service-cta]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/blog-service-cta
+          fetch-depth: 0
+      - name: Add article-to-service CTAs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('blog.html')
+          text = path.read_text(encoding='utf-8')
+
+          style_anchor = ".modal-body p{margin-bottom:18px;}\n"
+          style_block = style_anchor + ".modal-actions{margin-top:28px;padding-top:22px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;}\n.modal-action{display:inline-block;padding:11px 16px;border:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:0.75rem;font-weight:700;transition:all 0.3s;}\n.modal-action:hover{border-color:var(--blue);background:rgba(0,170,255,0.06);}\n.modal-action.primary{background:var(--blue);color:#020408;border-color:var(--blue);}\n.modal-action.primary:hover{background:var(--cyan);border-color:var(--cyan);}\n"
+          if '.modal-actions{' not in text:
+              if style_anchor not in text:
+                  raise SystemExit('modal style anchor not found')
+              text = text.replace(style_anchor, style_block, 1)
+
+          markup_anchor = '      <div class="modal-body" id="modalBody"></div>\n'
+          markup = markup_anchor + '      <div class="modal-actions" id="modalActions">\n        <a class="modal-action" id="relatedServiceLink" href="services.html">関連サービスを見る</a>\n        <a class="modal-action primary" id="consultServiceLink" href="contact.html">この内容を相談する</a>\n      </div>\n'
+          if 'id="modalActions"' not in text:
+              if markup_anchor not in text:
+                  raise SystemExit('modal markup anchor not found')
+              text = text.replace(markup_anchor, markup, 1)
+
+          js_anchor = "function openModal(id){\n"
+          helper = "const serviceByCategory = {\n  AI:{anchor:'ai-consulting',service:'AI導入コンサルティング'},\n  WEB:{anchor:'web-development',service:'WEB制作'},\n  VIDEO:{anchor:'ai-video',service:'AI動画CM制作'},\n  SNS:{anchor:'sns-management',service:'SNS運用代行'}\n};\n\nfunction updateArticleActions(article){\n  const config = serviceByCategory[article?.cat] || null;\n  const serviceLink = document.getElementById('relatedServiceLink');\n  const consultLink = document.getElementById('consultServiceLink');\n  if(!serviceLink || !consultLink) return;\n  if(config){\n    serviceLink.href = `services.html#${config.anchor}`;\n    consultLink.href = `contact.html?service=${encodeURIComponent(config.service)}`;\n  } else {\n    serviceLink.href = 'services.html';\n    consultLink.href = 'contact.html';\n  }\n}\n\n" + js_anchor
+          if 'const serviceByCategory' not in text:
+              if js_anchor not in text:
+                  raise SystemExit('openModal anchor not found')
+              text = text.replace(js_anchor, helper, 1)
+
+          modal_body_anchor = "  document.getElementById('modalBody').innerHTML = sanitizeArticleHTML(a.body);\n"
+          modal_body_replace = modal_body_anchor + "  updateArticleActions(a);\n"
+          if 'updateArticleActions(a);' not in text:
+              if modal_body_anchor not in text:
+                  raise SystemExit('modal body assignment anchor not found')
+              text = text.replace(modal_body_anchor, modal_body_replace, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          python scripts/sync_sitemap_lastmod.py
+          python scripts/sync_sitemap_lastmod.py --check
+          python scripts/check_site.py
+          node scripts/check_inline_js.mjs
+          git diff --check
+
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm .github/workflows/one-shot-blog-service-cta.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add blog.html sitemap.xml .github/workflows/one-shot-blog-service-cta.yml
+          git commit -m "feat: connect blog articles to relevant services"
+          git push origin HEAD:ux/blog-service-cta
