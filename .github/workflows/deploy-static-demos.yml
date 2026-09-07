@@ -73,7 +73,6 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
-          mkdir -p "$remote_demos"
           mirror --reverse --verbose=1 --parallel=2 --no-perms --delete ./demos/ "$remote_demos/"
           bye
           LFTP
