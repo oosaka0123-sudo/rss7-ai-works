@@ -406,7 +406,7 @@ async function submitContact(event){
     showContactNotice(true, 'お問い合わせを受け付けました。通常1〜2営業日以内に返信します。');
     prepareContactForm().catch(()=>{});
   } catch(error) {
-    showContactNotice(false, (error.message || '送信できませんでした') + ' LINE、または info@rss7.net へ直接お問い合わせください。');
+    showContactNotice(false, (error.message || '送信できませんでした') + ' LINE、または時間をおいて再度お試しください。');
     contactCsrf = '';
     prepareContactForm().catch(()=>{});
   } finally {
