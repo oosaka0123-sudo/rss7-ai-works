@@ -1,0 +1,79 @@
+name: One-shot add site showcase
+
+on:
+  push:
+    branches: ["feat/add-site-showcase"]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Add showcase cards
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old_desc = 'RSS7 AI Worksが運営する3つのブランド。'
+          new_desc = 'RSS7 AI Worksが制作・運営するサイト／プロジェクト。'
+          assert text.count(old_desc) == 1, 'showcase description marker mismatch'
+          text = text.replace(old_desc, new_desc, 1)
+
+          assert 'https://claudecode.rss7.net/' not in text, 'Claude Code教室 already present'
+          assert 'oosaka0123-sudo/ai-development-orchestrator' not in text, 'AI development card already present'
+          assert 'https://www.nyoganji.com/' not in text, '如願寺 card already present'
+
+          start_marker = '<div class="sites-grid">'
+          start = text.index(start_marker) + len(start_marker)
+          end_marker = '</div></div></section>'
+          end = text.index(end_marker, start)
+
+          cards = (
+              '<a href="https://claudecode.rss7.net/" class="site-card fi">'
+              '<span class="site-logo">Claude Code教室</span>'
+              '<span class="site-url">claudecode.rss7.net</span>'
+              '<p>Claude Codeを学校の身近なたとえで学べる初心者向け学習サイト。AI開発・GitHub・MCPなどをやさしく解説。</p>'
+              '<span class="site-arrow">↗</span></a>'
+              '<a href="https://github.com/oosaka0123-sudo/ai-development-orchestrator" class="site-card fi">'
+              '<span class="site-logo">AI開発基盤</span>'
+              '<span class="site-url">AI Development Orchestrator</span>'
+              '<p>GPT・Claude Agent・GitHubをつなぎ、複数AIエージェントで開発を進めるためのオーケストレーション基盤。</p>'
+              '<span class="site-arrow">↗</span></a>'
+              '<a href="https://www.nyoganji.com/" class="site-card fi">'
+              '<span class="site-logo">如願寺｜寺院サイト</span>'
+              '<span class="site-url">nyoganji.com</span>'
+              '<p>大阪市平野区・如願寺の寺院サイト。由緒や仏事の情報を、初めての方にも分かりやすく届けるWebサイト。</p>'
+              '<span class="site-arrow">↗</span></a>'
+          )
+          text = text[:end] + cards + text[end:]
+          path.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+          git diff -- index.html
+      - name: Commit homepage change locally
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "feat: add Claude, AI development and temple showcase"
+      - name: Sync sitemap freshness
+        run: python scripts/sync_sitemap_lastmod.py
+      - name: Remove one-shot workflow and commit metadata
+        run: |
+          rm .github/workflows/one-shot-add-site-showcase.yml
+          git add sitemap.xml .github/workflows/one-shot-add-site-showcase.yml
+          git diff --cached --check
+          git commit -m "chore: sync sitemap after showcase update"
+          git push origin HEAD:feat/add-site-showcase
