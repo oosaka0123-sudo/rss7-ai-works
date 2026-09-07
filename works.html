@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>制作実績・プロジェクト | RSS7 AI Works</title>
+<meta name="description" content="RSS7 AI Worksの制作サイト・制作デモ・研究開発プロジェクトをご紹介します。Claude Code教室、AI開発サイト、如願寺7ページ制作デモなど、実際に公開している成果物をご覧いただけます。">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="制作実績・プロジェクト | RSS7 AI Works">
+<meta property="og:description" content="RSS7 AI Worksが制作・運営する公開サイト、制作デモ、研究開発プロジェクトをご紹介します。">
+<meta property="og:url" content="https://rss7.net/works.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://rss7.net/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://rss7.net/works.html">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23020408' rx='15'/%3E%3Ctext y='.85em' font-size='52' x='8' fill='%2300aaff' font-family='monospace' font-weight='bold'%3ER7%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--bg2:#060d14;--card:#0a1520;--blue:#00aaff;--cyan:#00ffee;--white:#e8f4ff;--gray:#7898b8;--border:rgba(0,170,255,.14);--glow:rgba(0,170,255,.25);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-serif;overflow-x:hidden;padding-bottom:0;}
+a{color:inherit;}
+header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,4,8,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:.1em;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:12px;}
+.logo-mark{width:36px;height:36px;border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;}
+.logo-mark span{font-family:'Orbitron',monospace;font-size:.65rem;font-weight:900;color:var(--blue);}
+.logo em{color:var(--blue);font-style:normal;}
+.nav-links{display:flex;gap:5px;align-items:center;}
+.nav-link{padding:8px 13px;font-size:.64rem;font-family:'Share Tech Mono',monospace;letter-spacing:.09em;text-decoration:none;border:1px solid var(--border);color:var(--gray);transition:border-color .25s,color .25s,background .25s;}
+.nav-link:hover,.nav-link.active{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,.05);}
+.menu-btn{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:10px;background:none;border:0;}
+.menu-btn span{width:24px;height:2px;background:var(--blue);display:block;}
+.mobile-menu{display:none;position:fixed;top:69px;left:0;right:0;background:rgba(2,4,8,.98);border-bottom:1px solid var(--border);padding:18px 20px;z-index:999;flex-direction:column;gap:8px;}
+.mobile-menu.open{display:flex;}
+.mobile-menu .nav-link{display:block;text-align:center;padding:14px;min-height:48px;}
+.page-hero{min-height:72vh;padding:150px 30px 90px;display:flex;align-items:flex-end;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 82% 12%,rgba(0,170,255,.11),transparent 68%),linear-gradient(rgba(0,170,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,170,255,.025) 1px,transparent 1px);background-size:auto,52px 52px,52px 52px;}
+.hero-inner{max-width:1100px;width:100%;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:'Share Tech Mono',monospace;font-size:.64rem;letter-spacing:.34em;color:var(--cyan);margin-bottom:22px;}
+h1{font-family:'Orbitron',monospace;font-size:clamp(3rem,9vw,7.2rem);line-height:.92;letter-spacing:.025em;max-width:980px;margin-bottom:30px;}
+h1 span{display:block;color:transparent;-webkit-text-stroke:1px var(--blue);}
+.hero-lead{max-width:660px;font-size:clamp(.92rem,2vw,1.06rem);line-height:2;color:var(--gray);font-weight:300;}
+.hero-meta{display:flex;gap:0;margin-top:48px;border-top:1px solid var(--border);max-width:720px;}
+.hero-meta span{padding:15px 26px 0 0;margin-right:26px;border-right:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:.63rem;letter-spacing:.13em;color:var(--gray);}
+.hero-meta span:last-child{border-right:0;margin-right:0;}
+.section{padding:95px 30px;max-width:1100px;margin:0 auto;}
+.section-head{display:grid;grid-template-columns:220px 1fr;gap:50px;margin-bottom:58px;align-items:start;}
+.s-label{font-family:'Share Tech Mono',monospace;color:var(--blue);font-size:.62rem;letter-spacing:.32em;padding-top:8px;}
+.s-title{font-size:clamp(1.75rem,4vw,3.3rem);line-height:1.35;font-weight:700;max-width:760px;}
+.s-title strong{color:var(--cyan);font-weight:700;}
+.work-list{border-top:1px solid var(--border);}
+.work{display:grid;grid-template-columns:110px minmax(0,1.25fr) minmax(280px,.75fr);gap:42px;padding:58px 0;border-bottom:1px solid var(--border);position:relative;}
+.work-index{font-family:'Orbitron',monospace;font-size:clamp(2.8rem,5vw,5rem);font-weight:900;color:rgba(0,170,255,.16);line-height:1;}
+.work-type{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.23em;color:var(--blue);margin-bottom:12px;display:block;}
+.work h2{font-size:clamp(1.5rem,3vw,2.35rem);line-height:1.3;margin-bottom:18px;}
+.work p{font-size:.88rem;line-height:2;color:var(--gray);max-width:620px;}
+.work-facts{align-self:end;border-left:1px solid var(--border);padding-left:28px;display:grid;gap:15px;}
+.fact{display:grid;gap:5px;}
+.fact dt{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.18em;color:rgba(0,170,255,.72);}
+.fact dd{font-size:.78rem;line-height:1.7;color:var(--gray);}
+.work-link{display:inline-flex;align-items:center;gap:10px;margin-top:28px;min-height:46px;padding:10px 0;color:var(--cyan);text-decoration:none;font-size:.8rem;font-weight:700;border-bottom:1px solid rgba(0,255,238,.4);}
+.work-link::after{content:'↗';font-family:'Share Tech Mono',monospace;transition:transform .25s;}
+.work-link:hover::after{transform:translate(3px,-3px);}
+.legend{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.legend-inner{max-width:1100px;margin:0 auto;padding:62px 30px;display:grid;grid-template-columns:1fr 1.4fr;gap:60px;}
+.legend h2{font-size:clamp(1.5rem,3vw,2.4rem);line-height:1.4;}
+.legend p{font-size:.86rem;line-height:2;color:var(--gray);}
+.cta{padding:100px 30px;text-align:center;max-width:900px;margin:0 auto;}
+.cta .eyebrow{margin-bottom:18px;}
+.cta h2{font-family:'Orbitron',monospace;font-size:clamp(2rem,5vw,4.1rem);line-height:1.1;margin-bottom:22px;}
+.cta p{color:var(--gray);line-height:1.9;margin-bottom:32px;}
+.btns{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;}
+.btn-p,.btn-s{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:14px 32px;text-decoration:none;font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.1em;}
+.btn-p{background:var(--blue);color:#020408;font-weight:700;}
+.btn-p:hover{background:var(--cyan);}
+.btn-s{border:1px solid var(--border);color:var(--gray);}
+.btn-s:hover{border-color:var(--blue);color:var(--blue);}
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:30px;text-align:center;}
+footer p{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--gray);letter-spacing:.1em;}
+.line-float{position:fixed;bottom:25px;right:25px;width:64px;height:64px;border-radius:50%;background:#06C755;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 6px 24px rgba(6,199,85,.38);z-index:998;transition:transform .25s;}
+.line-float:hover{transform:scale(1.05);}
+.line-float svg{width:34px;height:34px;fill:#fff;}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.v{opacity:1;transform:none;}
+@media(max-width:900px){.section-head{grid-template-columns:1fr;gap:12px}.work{grid-template-columns:78px 1fr}.work-facts{grid-column:2;border-left:0;border-top:1px solid var(--border);padding:22px 0 0}.legend-inner{grid-template-columns:1fr;gap:18px}}
+@media(max-width:768px){.nav-links{display:none}.menu-btn{display:flex}.page-hero{min-height:64vh;padding:125px 20px 70px}.section{padding:72px 20px}.hero-meta{display:grid;grid-template-columns:1fr 1fr}.hero-meta span{border-right:0;margin-right:0;padding-top:14px}.work{grid-template-columns:1fr;gap:16px;padding:44px 0}.work-index{font-size:2.3rem}.work-facts{grid-column:auto}.legend-inner{padding:52px 20px}.cta{padding:78px 20px 110px}.line-float{width:56px;height:56px;right:18px;bottom:max(18px,env(safe-area-inset-bottom))}body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}}
+@media(max-width:430px){h1{font-size:clamp(2.65rem,14vw,4.1rem)}.hero-meta{grid-template-columns:1fr}.hero-lead,.work p,.legend p{font-size:.9rem}.btn-p,.btn-s{width:100%}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.work-link::after,.line-float{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo"><div class="logo-mark"><span>R7</span></div>RSS7 <em>AI Works</em></a>
+  <nav class="nav-links" aria-label="メインナビゲーション">
+    <a href="index.html" class="nav-link">TOP</a><a href="services.html" class="nav-link">SERVICES</a><a href="works.html" class="nav-link active" aria-current="page">WORKS</a><a href="blog.html" class="nav-link">BLOG</a><a href="about.html" class="nav-link">ABOUT</a><a href="contact.html" class="nav-link">CONTACT</a>
+  </nav>
+  <button class="menu-btn" type="button" aria-label="メニューを開く" aria-controls="mobileMenu" aria-expanded="false"><span></span><span></span><span></span></button>
+</header>
+<nav class="mobile-menu" id="mobileMenu" aria-label="モバイルナビゲーション">
+  <a href="index.html" class="nav-link">TOP</a><a href="services.html" class="nav-link">SERVICES</a><a href="works.html" class="nav-link active" aria-current="page">WORKS</a><a href="blog.html" class="nav-link">BLOG</a><a href="about.html" class="nav-link">ABOUT</a><a href="contact.html" class="nav-link">CONTACT</a>
+</nav>
+<main>
+<section class="page-hero">
+  <div class="hero-inner reveal">
+    <div class="eyebrow">CASE STUDIES / PROJECTS</div>
+    <h1>実物で見る。<span>RSS7 WORKS.</span></h1>
+    <p class="hero-lead">「できます」だけで終わらせず、実際に公開しているサイト・制作デモ・研究開発プロジェクトを紹介します。第三者の顧客実績と誤認させないよう、種別も明確に表示しています。</p>
+    <div class="hero-meta"><span>PUBLIC OUTPUTS</span><span>BLACK × CYAN</span><span>MOBILE FIRST</span><span>AI + HUMAN QA</span></div>
+  </div>
+</section>
+<section class="section" aria-labelledby="works-title">
+  <div class="section-head reveal"><div class="s-label">SELECTED WORKS</div><h2 class="s-title" id="works-title">言葉より先に、<strong>公開された成果物</strong>を見てもらう。</h2></div>
+  <div class="work-list">
+    <article class="work reveal">
+      <div class="work-index" aria-hidden="true">01</div>
+      <div>
+        <span class="work-type">PUBLIC WEBSITE / EDUCATION</span>
+        <h2>Claude Code教室</h2>
+        <p>Claude Codeを使った開発や学習の入口として公開しているWebサイト。AI開発を難しい言葉だけで説明せず、実際のサイト体験として届けるためのプロジェクトです。</p>
+        <a class="work-link" href="https://claudecode.rss7.net/" target="_blank" rel="noopener">公開サイトを見る</a>
+      </div>
+      <dl class="work-facts"><div class="fact"><dt>TYPE</dt><dd>公開Webサイト</dd></div><div class="fact"><dt>FOCUS</dt><dd>AI開発 / 学習コンテンツ</dd></div><div class="fact"><dt>DELIVERY</dt><dd>スマホから閲覧できる公開サイト</dd></div></dl>
+    </article>
+    <article class="work reveal">
+      <div class="work-index" aria-hidden="true">02</div>
+      <div>
+        <span class="work-type">RESEARCH / DEVELOPMENT</span>
+        <h2>AI開発サイト</h2>
+        <p>複数AIエージェント、GitHub、開発フローをつなぐ実験・開発記録を公開するサイト。AIを閲覧時の待ち時間に使うのではなく、制作・検証・更新の裏側で活用する考え方を形にしています。</p>
+        <a class="work-link" href="https://oosaka0123-sudo.github.io/ai-agent/" target="_blank" rel="noopener">公開サイトを見る</a>
+      </div>
+      <dl class="work-facts"><div class="fact"><dt>TYPE</dt><dd>研究・開発プロジェクト</dd></div><div class="fact"><dt>FOCUS</dt><dd>Multi-AI / GitHub / 自動化</dd></div><div class="fact"><dt>DELIVERY</dt><dd>GitHub Pages公開サイト</dd></div></dl>
+    </article>
+    <article class="work reveal">
+      <div class="work-index" aria-hidden="true">03</div>
+      <div>
+        <span class="work-type">WEBSITE REDESIGN DEMO</span>
+        <h2>如願寺 7ページ制作デモ</h2>
+        <p>寺院サイトのリニューアルを想定した7ページ構成の制作デモ。黒×シアンとは異なる案件世界観に合わせ、和の余白と多言語UIを取り入れた別トーンのWeb表現です。</p>
+        <a class="work-link" href="https://rss7.net/demos/nyoganji/" target="_blank" rel="noopener">制作デモを見る</a>
+      </div>
+      <dl class="work-facts"><div class="fact"><dt>TYPE</dt><dd>制作デモ</dd></div><div class="fact"><dt>FOCUS</dt><dd>寺院 / 7ページ / 多言語UI</dd></div><div class="fact"><dt>DELIVERY</dt><dd>RSS7上の公開デモ</dd></div></dl>
+    </article>
+  </div>
+</section>
+<section class="legend">
+  <div class="legend-inner reveal"><h2>実績は、<br>種類を分けて正確に。</h2><p>このページでは、クライアント納品実績・自社運営・制作デモ・研究開発を同じ意味で扱いません。現時点で確認できる公開成果物を、その性質が分かる形で掲載します。今後、公開許可を得た制作実績が増えた場合も同じ基準で追加します。</p></div>
+</section>
+<section class="cta reveal">
+  <div class="eyebrow">START A PROJECT</div>
+  <h2>次は、あなたの<br>プロジェクトを。</h2>
+  <p>Web制作・AI動画・アプリ・AI導入など、内容が固まっていなくても相談できます。</p>
+  <div class="btns"><a href="contact.html" class="btn-p">無料相談を始める</a><a href="services.html" class="btn-s">サービスを見る</a></div>
+</section>
+</main>
+<footer><p>© 2026 RSS7 AI Works — OSAKA, JAPAN</p></footer>
+<a href="https://lin.ee/RjoCIMX" target="_blank" rel="noopener" class="line-float" aria-label="LINEで無料相談"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.365 9.89c.5 0 .906.408.906.91s-.406.91-.906.91h-2.546v1.62h2.546c.5 0 .906.408.906.91s-.406.91-.906.91h-3.451a.91.91 0 0 1-.907-.91V8.15c0-.502.406-.91.907-.91h3.451c.5 0 .906.408.906.91s-.406.91-.906.91h-2.546v.83h2.546zm-5.68 4.35c0 .394-.252.744-.626.865a.9.9 0 0 1-1.018-.324l-3.112-4.245v3.704c0 .502-.406.91-.907.91s-.906-.408-.906-.91V8.15c0-.394.252-.744.626-.865a.9.9 0 0 1 1.018.324l3.112 4.245V8.15c0-.502.406-.91.907-.91s.906.408.906.91v6.09zm-7.752 0c0 .502-.406.91-.906.91s-.907-.408-.907-.91V8.15c0-.502.406-.91.907-.91s.906.408.906.91v6.09zM12 2C6.477 2 2 5.813 2 10.517c0 4.217 3.58 7.749 8.418 8.418.328.071.774.217.887.497.102.254.067.652.033.908l-.144.86c-.044.254-.203.994.873.542 1.077-.452 5.812-3.423 7.929-5.861C21.459 14.28 22 12.656 22 10.517 22 5.813 17.523 2 12 2z"/></svg></a>
+<script>
+const menuBtn=document.querySelector('.menu-btn');const mobileMenu=document.querySelector('.mobile-menu');
+menuBtn.addEventListener('click',()=>{const open=mobileMenu.classList.toggle('open');menuBtn.setAttribute('aria-expanded',String(open));menuBtn.setAttribute('aria-label',open?'メニューを閉じる':'メニューを開く');});
+mobileMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mobileMenu.classList.remove('open');menuBtn.setAttribute('aria-expanded','false');menuBtn.setAttribute('aria-label','メニューを開く');}));
+const items=[...document.querySelectorAll('.reveal')];
+if('IntersectionObserver'in window&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('v');io.unobserve(e.target);}}),{threshold:.08});items.forEach(el=>io.observe(el));}else{items.forEach(el=>el.classList.add('v'));}
+</script>
+</body>
+</html>
