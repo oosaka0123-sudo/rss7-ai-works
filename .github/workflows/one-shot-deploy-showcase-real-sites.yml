@@ -1,0 +1,75 @@
+name: One-shot deploy real showcase sites
+
+on:
+  push:
+    branches: ["deploy/showcase-real-sites-production"]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+      DEPLOY_DIR: ${{ vars.LOLIPOP_DEPLOY_DIR }}
+      SITE_URL: ${{ vars.LOLIPOP_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate homepage
+        run: |
+          python scripts/check_site.py
+          node scripts/check_inline_js.mjs
+          grep -Fq 'https://oosaka0123-sudo.github.io/ai-agent/' index.html
+          grep -Fq 'https://rss7.net/demos/nyoganji/' index.html
+      - name: Check deployment configuration
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || { echo "Deployment secrets are incomplete."; exit 1; }
+          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || exit 1
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || exit 1
+          [[ "$DEPLOY_DIR" == "/" ]] || exit 1
+          [[ "${SITE_URL%/}" == "https://rss7.net" ]] || exit 1
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+      - name: Upload homepage only
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          put index.html -o "${DEPLOY_DIR%/}/index.html"
+          bye
+          LFTP
+      - name: Verify production links and targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          page="$(curl --fail --silent --show-error "${SITE_URL%/}/?showcase-real=$(date +%s)")"
+          grep -Fq 'https://oosaka0123-sudo.github.io/ai-agent/' <<< "$page"
+          grep -Fq 'https://rss7.net/demos/nyoganji/' <<< "$page"
+          curl --fail --silent --show-error --location 'https://oosaka0123-sudo.github.io/ai-agent/' >/dev/null
+          curl --fail --silent --show-error --location 'https://rss7.net/demos/nyoganji/' >/dev/null
+          echo "Production showcase links and both public targets verified."
