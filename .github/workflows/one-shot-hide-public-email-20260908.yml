@@ -1,0 +1,100 @@
+name: One-shot hide public email production deploy
+
+on:
+  push:
+    branches: ["deploy/hide-public-email-20260908"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rss7-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-static:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+      DEPLOY_DIR: ${{ vars.LOLIPOP_DEPLOY_DIR }}
+      SITE_URL: ${{ vars.LOLIPOP_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate no public email exposure in target pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -nE 'info@rss7[.]net|mailto:info@rss7[.]net' about.html privacy.html contact.html
+          grep -Fq 'お問い合わせフォーム' about.html
+          grep -Fq 'お問い合わせフォーム' privacy.html
+          grep -Fq 'LINE、または時間をおいて再度お試しください。' contact.html
+
+      - name: Check deployment configuration
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || { echo "Deployment secrets are incomplete."; exit 1; }
+          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || { echo "FTP scheme is invalid."; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "FTP port is invalid."; exit 1; }
+          [[ "$DEPLOY_DIR" == "/" && "${SITE_URL%/}" == "https://rss7.net" ]] || { echo "Deploy is restricted to verified rss7.net root."; exit 1; }
+
+      - name: Install deployment tool
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload only ABOUT PRIVACY CONTACT
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          cd "$DEPLOY_DIR"
+          put -O . about.html
+          put -O . privacy.html
+          put -O . contact.html
+          bye
+          LFTP
+
+      - name: Verify production no longer exposes email
+        shell: bash
+        run: |
+          set -euo pipefail
+          SITE_URL="${SITE_URL%/}"
+          for attempt in 1 2 3 4 5 6; do
+            about="$(curl --fail --silent --show-error "$SITE_URL/about.html?email_hide=${GITHUB_SHA}" || true)"
+            privacy="$(curl --fail --silent --show-error "$SITE_URL/privacy.html?email_hide=${GITHUB_SHA}" || true)"
+            contact="$(curl --fail --silent --show-error "$SITE_URL/contact.html?email_hide=${GITHUB_SHA}" || true)"
+            if ! grep -Fq 'info@rss7.net' <<< "$about" \
+              && ! grep -Fq 'info@rss7.net' <<< "$privacy" \
+              && ! grep -Fq 'info@rss7.net' <<< "$contact" \
+              && grep -Fq 'お問い合わせフォーム' <<< "$about" \
+              && grep -Fq 'お問い合わせフォーム' <<< "$privacy" \
+              && grep -Fq 'LINEで無料相談' <<< "$contact"; then
+              echo "Public email removal verified in production."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Production verification failed."
+          exit 1
