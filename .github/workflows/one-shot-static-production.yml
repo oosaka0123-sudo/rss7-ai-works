@@ -1,0 +1,100 @@
+name: One-shot static production deploy
+
+on:
+  push:
+    branches: ["deploy/static-public-only"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rss7-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-static:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+      DEPLOY_DIR: ${{ vars.LOLIPOP_DEPLOY_DIR }}
+      SITE_URL: ${{ vars.LOLIPOP_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate public site
+        run: python scripts/check_site.py
+
+      - name: Validate service-to-contact contract
+        run: python scripts/check_service_contact_contract.py
+
+      - name: Validate inline JavaScript syntax
+        run: node scripts/check_inline_js.mjs
+
+      - name: Check deployment configuration
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || { echo "Deployment secrets are incomplete."; exit 1; }
+          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || { echo "FTP scheme is invalid."; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "FTP port is invalid."; exit 1; }
+          [[ "$DEPLOY_DIR" == "/" && "${SITE_URL%/}" == "https://rss7.net" ]] || { echo "Static deploy is restricted to verified rss7.net root."; exit 1; }
+
+      - name: Install deployment tool
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload public static site only
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mirror --reverse --verbose=1 --parallel=2 --no-perms \
+            --exclude='(^|/)api(/|$)|(^|/)data(/|$)|(^|/).*\.php$|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)[.]gitignore$|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md|README[.]md)$|[.]zip$' \
+            ./ "$DEPLOY_DIR"
+          bye
+          LFTP
+
+      - name: Verify visible production pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          SITE_URL="${SITE_URL%/}"
+          for attempt in 1 2 3 4 5 6; do
+            home="$(curl --fail --silent --show-error "$SITE_URL/?static_deploy=${GITHUB_SHA}" || true)"
+            services="$(curl --fail --silent --show-error "$SITE_URL/services.html?static_deploy=${GITHUB_SHA}" || true)"
+            contact="$(curl --fail --silent --show-error "$SITE_URL/contact.html?static_deploy=${GITHUB_SHA}" || true)"
+            if grep -Fq 'RSS7 AI Works' <<< "$home" \
+              && grep -Fq 'ご相談から納品まで' <<< "$services" \
+              && grep -Fq 'LINEで無料相談' <<< "$contact"; then
+              echo "Static production verification passed."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Static production verification failed."
+          exit 1
