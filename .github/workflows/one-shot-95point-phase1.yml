@@ -1,0 +1,89 @@
+name: One-shot 95-point phase1
+
+on:
+  push:
+    branches: ["design/95point-phase1"]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Improve top-level works conversion path
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old='<div class="hero-btns"><a href="contact.html" class="btn-p">無料相談を始める</a><a href="#services" class="btn-s">サービスを見る →</a></div>'
+          new='<div class="hero-btns"><a href="contact.html" class="btn-p">無料相談を始める</a><a href="works.html" class="btn-s">制作実績を見る →</a></div>'
+          assert s.count(old)==1, 'hero CTA marker mismatch'
+          s=s.replace(old,new,1)
+
+          old_mobile='<a href="index.html" class="sub-link">TOP</a><a href="services.html" class="sub-link">SERVICES</a><a href="blog.html" class="sub-link">BLOG</a>'
+          new_mobile='<a href="index.html" class="sub-link">TOP</a><a href="services.html" class="sub-link">SERVICES</a><a href="works.html" class="sub-link">WORKS</a><a href="blog.html" class="sub-link">BLOG</a>'
+          assert s.count(old_mobile)==1, 'mobile nav marker mismatch'
+          s=s.replace(old_mobile,new_mobile,1)
+
+          old_head='<div class="sites-section"><div class="sites-inner"><div class="s-label fi">OUR BRANDS</div><h2 class="s-title fi">BRANDS</h2><p class="s-desc fi">RSS7 AI Worksが制作・運営するサイト／プロジェクト。</p>'
+          new_head='<div class="sites-section"><div class="sites-inner"><div class="s-label fi">CASE STUDIES / PROJECTS</div><h2 class="s-title fi">WORKS</h2><p class="s-desc fi">運営ブランド、制作サイト、制作デモ、研究開発を種類が分かる形で紹介します。</p>'
+          assert s.count(old_head)==1, 'works section heading marker mismatch'
+          s=s.replace(old_head,new_head,1)
+
+          old_end='</span></a></div></div></div>\n<div class="section"><div class="s-label fi">HOW IT WORKS</div>'
+          # There are several cards; target the exact last Nyoganji close by using its unique text.
+          nyo='RSS7 AI Worksが制作した如願寺の7ページ構成リニューアルデモ。和の世界観と多言語展開を意識した寺院サイト。</p><span class="site-arrow">↗</span></a></div></div></div>'
+          assert s.count(nyo)==1, 'Nyoganji section tail marker mismatch'
+          s=s.replace(nyo,nyo+'<div style="text-align:center;margin-top:34px;" class="fi"><a href="works.html" class="btn-s">制作実績・プロジェクトを詳しく見る →</a></div>',1)
+
+          # Keep current black/cyan CSS; only add mobile safe-area and reduced-motion safeguards.
+          insert='@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.fi{opacity:1!important;transform:none!important;transition:none!important}.scanline,.particle,.logo-mark::before,.hero-badge::before,.line-float{animation:none!important}}\n@media(max-width:768px){body{padding-bottom:74px}}\n'
+          marker='</style>\n<script type="application/ld+json">'
+          assert s.count(marker)==1, 'style marker mismatch'
+          s=s.replace(marker,insert+marker,1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Add WORKS to sitemap
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('sitemap.xml')
+          s=p.read_text(encoding='utf-8')
+          if 'https://rss7.net/works.html' not in s:
+            marker='  <url>\n    <loc>https://rss7.net/about.html</loc>'
+            entry='  <url>\n    <loc>https://rss7.net/works.html</loc>\n    <lastmod>2026-09-07</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.9</priority>\n  </url>\n'
+            assert marker in s, 'sitemap insertion marker missing'
+            s=s.replace(marker,entry+marker,1)
+            p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate phase 1
+        run: |
+          python scripts/check_site.py
+          node scripts/check_inline_js.mjs
+          python scripts/check_service_contact_contract.py
+          grep -Fq 'href="works.html"' index.html
+          grep -Fq 'https://rss7.net/works.html' sitemap.xml
+          grep -Fq 'Claude Code教室' works.html
+          grep -Fq 'AI開発サイト' works.html
+          grep -Fq '如願寺 7ページ制作デモ' works.html
+      - name: Commit generated updates and remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/one-shot-95point-phase1.yml
+          git add index.html works.html sitemap.xml docs/95_POINT_REDESIGN.md .github/workflows/one-shot-95point-phase1.yml
+          git diff --cached --check
+          git commit -m "feat: establish trust-first works experience"
+          git push origin HEAD:design/95point-phase1
