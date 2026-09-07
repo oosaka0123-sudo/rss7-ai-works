@@ -64,7 +64,7 @@ jobs:
             This job intentionally has READ-ONLY repository contents permission. Work only in the local checkout.
 
             Mandatory rules:
-            - Do not commit, push, create a branch, create/merge/close a PR, or deploy. A separate trusted workflow job will package and push the local patch to a fixed non-main branch after validation.
+            - Do not commit, push, create a branch, create/merge/close a PR, or deploy. Separate trusted jobs will validate the local patch and push it only to a fixed non-main branch.
             - Never attempt to bypass the read-only token or acquire another GitHub credential.
             - Never read, print, expose, rotate, create, or modify Secrets/Variables/credentials.
             - Never modify production data, server-only config, api/config.local.php, .env files, or credentials.
@@ -154,12 +154,24 @@ jobs:
           git apply "$PATCH"
           git diff --check
 
-      - name: Sync sitemap lastmod
+      - name: Create local validation snapshot
+        env:
+          SNAPSHOT_DATE: ${{ github.event.comment.created_at }}
+        run: |
+          set -euo pipefail
+          git config user.name "claude-validation-snapshot"
+          git config user.email "41898282+claude[bot]@users.noreply.github.com"
+          git add -A
+          GIT_AUTHOR_DATE="$SNAPSHOT_DATE" GIT_COMMITTER_DATE="$SNAPSHOT_DATE" git commit -m "validation snapshot for issue #${{ github.event.issue.number }}"
+
+      - name: Sync sitemap lastmod from snapshot history
+        env:
+          SITEMAP_GIT_REF: HEAD
         run: python scripts/sync_sitemap_lastmod.py
 
       - name: Validate sitemap freshness
         env:
-          SITEMAP_GIT_REF: ${{ github.sha }}
+          SITEMAP_GIT_REF: HEAD
         run: python scripts/sync_sitemap_lastmod.py --check
 
       - name: Validate public site
@@ -188,15 +200,14 @@ jobs:
           fi
           find api -name '*.php' -print0 | xargs -0 -n1 php -l
 
-      - name: Package validated patch
+      - name: Package validated patch against original base
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-          git add -N -- .
-          git diff --check
-          git diff --binary --full-index > "$RUNNER_TEMP/validated.patch"
-          git diff --name-only --diff-filter=ACDMRTUXB > "$RUNNER_TEMP/validated-files.txt"
+          BASE_SHA="${{ github.sha }}"
+          git diff --check "$BASE_SHA"
+          git diff --binary --full-index "$BASE_SHA" > "$RUNNER_TEMP/validated.patch"
+          git diff --name-only --diff-filter=ACDMRTUXB "$BASE_SHA" > "$RUNNER_TEMP/validated-files.txt"
 
           test -s "$RUNNER_TEMP/validated.patch"
           test -s "$RUNNER_TEMP/validated-files.txt"
@@ -205,6 +216,9 @@ jobs:
             echo "::error::Validation produced a protected-path change."
             exit 1
           fi
+
+          echo "Validated files:"
+          cat "$RUNNER_TEMP/validated-files.txt"
 
       - name: Upload validated patch
         uses: actions/upload-artifact@v4
@@ -260,6 +274,7 @@ jobs:
       - name: Commit and push fixed non-main branch
         env:
           PUSH_TOKEN: ${{ github.token }}
+          SNAPSHOT_DATE: ${{ github.event.comment.created_at }}
         shell: bash
         run: |
           set -euo pipefail
@@ -278,7 +293,7 @@ jobs:
           git config user.email "41898282+claude[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --check
-          git commit -m "feat: implement issue #${{ github.event.issue.number }} with Claude Code"
+          GIT_AUTHOR_DATE="$SNAPSHOT_DATE" GIT_COMMITTER_DATE="$SNAPSHOT_DATE" git commit -m "feat: implement issue #${{ github.event.issue.number }} with Claude Code"
           COMMIT_SHA="$(git rev-parse HEAD)"
 
           git remote set-url origin "https://x-access-token:${PUSH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -292,4 +307,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue comment "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --body "Claude Code implementation completed on branch \`$BRANCH\` at \`$COMMIT_SHA\`. The patch passed the repository validation pipeline in a read-only job. No PR was created and nothing was merged or deployed. PM should inspect the diff and open the PR."
+          gh issue comment "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --body "Claude Code implementation completed on branch \`$BRANCH\` at \`$COMMIT_SHA\`. The patch passed the repository validation pipeline in read-only jobs. No PR was created and nothing was merged or deployed. PM should inspect the diff and open the PR."
