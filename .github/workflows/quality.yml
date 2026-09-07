@@ -28,6 +28,8 @@ jobs:
         run: python scripts/check_works_contract.py
       - name: Validate phase 2 service architecture
         run: python scripts/check_phase2_services.py
+      - name: Validate ABOUT trust and icon contract
+        run: python scripts/check_about_contract.py
       - name: Validate service-to-contact contract
         run: python scripts/check_service_contact_contract.py
       - name: Validate inline JavaScript syntax
