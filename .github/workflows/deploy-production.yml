@@ -2,7 +2,7 @@ name: Deploy production
 
 on:
   workflow_run:
-    workflows: ["Site quality"]
+    workflows: ["Site quality checks"]
     types: [completed]
   workflow_dispatch:
 
