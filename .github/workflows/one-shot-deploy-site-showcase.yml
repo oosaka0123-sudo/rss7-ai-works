@@ -1,0 +1,75 @@
+name: One-shot deploy site showcase
+
+on:
+  push:
+    branches: ["deploy/site-showcase-production"]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+      DEPLOY_DIR: ${{ vars.LOLIPOP_DEPLOY_DIR }}
+      SITE_URL: ${{ vars.LOLIPOP_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate changed public files
+        run: |
+          python scripts/check_site.py
+          python scripts/sync_sitemap_lastmod.py --check
+          node scripts/check_inline_js.mjs
+      - name: Check deployment configuration
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || { echo "Deployment secrets are incomplete."; exit 1; }
+          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || { echo "FTP scheme is invalid."; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "FTP port is invalid."; exit 1; }
+          [[ "$DEPLOY_DIR" == "/" ]] || { echo "Unexpected deploy directory."; exit 1; }
+          [[ "${SITE_URL%/}" == "https://rss7.net" ]] || { echo "Unexpected production URL."; exit 1; }
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+      - name: Upload only homepage and sitemap
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          put index.html -o "${DEPLOY_DIR%/}/index.html"
+          put sitemap.xml -o "${DEPLOY_DIR%/}/sitemap.xml"
+          bye
+          LFTP
+      - name: Verify production showcase
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="${SITE_URL%/}/?showcase=$(date +%s)"
+          page="$(curl --fail --silent --show-error "$url")"
+          grep -Fq 'Claude Code教室' <<< "$page"
+          grep -Fq 'AI開発基盤' <<< "$page"
+          grep -Fq '如願寺｜寺院サイト' <<< "$page"
+          echo "Production showcase verified."
