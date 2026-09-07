@@ -37,7 +37,7 @@ jobs:
 
           start_marker = '<div class="sites-grid">'
           start = text.index(start_marker) + len(start_marker)
-          end_marker = '</div></div></section>'
+          end_marker = '</div></div></div>\n<div class="section"'
           end = text.index(end_marker, start)
 
           cards = (
