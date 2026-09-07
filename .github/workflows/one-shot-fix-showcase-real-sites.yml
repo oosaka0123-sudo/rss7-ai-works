@@ -1,0 +1,57 @@
+name: One-shot fix showcase real sites
+
+on:
+  push:
+    branches: ["fix/showcase-real-sites"]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Replace showcase destinations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old_ai = '<a href="https://github.com/oosaka0123-sudo/ai-development-orchestrator" class="site-card fi"><span class="site-logo">AI開発基盤</span><span class="site-url">AI Development Orchestrator</span><p>GPT・Claude Agent・GitHubをつなぎ、複数AIエージェントで開発を進めるためのオーケストレーション基盤。</p><span class="site-arrow">↗</span></a>'
+          new_ai = '<a href="https://oosaka0123-sudo.github.io/ai-agent/" class="site-card fi"><span class="site-logo">AI開発サイト</span><span class="site-url">oosaka0123-sudo.github.io/ai-agent</span><p>複数AIを使った開発の記録・構成・実践ガイドをまとめたAI開発サイト。スマホ中心のAI開発や各AIの役割を紹介。</p><span class="site-arrow">↗</span></a>'
+          assert text.count(old_ai) == 1, 'AI showcase marker mismatch'
+          text = text.replace(old_ai, new_ai, 1)
+
+          old_temple = '<a href="https://www.nyoganji.com/" class="site-card fi"><span class="site-logo">如願寺｜寺院サイト</span><span class="site-url">nyoganji.com</span><p>大阪市平野区・如願寺の寺院サイト。由緒や仏事の情報を、初めての方にも分かりやすく届けるWebサイト。</p><span class="site-arrow">↗</span></a>'
+          new_temple = '<a href="https://rss7.net/demos/nyoganji/" class="site-card fi"><span class="site-logo">如願寺｜7ページ制作デモ</span><span class="site-url">rss7.net/demos/nyoganji</span><p>RSS7 AI Worksが制作した如願寺の7ページ構成リニューアルデモ。和の世界観と多言語展開を意識した寺院サイト。</p><span class="site-arrow">↗</span></a>'
+          assert text.count(old_temple) == 1, 'Nyoganji showcase marker mismatch'
+          text = text.replace(old_temple, new_temple, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+          git diff -- index.html
+      - name: Commit homepage change locally
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "fix: link showcase cards to real websites"
+      - name: Sync sitemap freshness
+        run: python scripts/sync_sitemap_lastmod.py
+      - name: Remove one-shot workflow and commit metadata
+        run: |
+          rm .github/workflows/one-shot-fix-showcase-real-sites.yml
+          git add sitemap.xml .github/workflows/one-shot-fix-showcase-real-sites.yml
+          git diff --cached --check
+          git commit -m "chore: sync sitemap after showcase destination fix"
+          git push origin HEAD:fix/showcase-real-sites
