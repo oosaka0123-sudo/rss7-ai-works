@@ -25,14 +25,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;displa
 .logo-mark{width:36px;height:36px;border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;}
 .logo-mark span{font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:900;color:var(--blue);}
 .logo em{color:var(--blue);font-style:normal;}
-.nav-links{display:flex;gap:5px;align-items:center;}
 .nav-link{padding:6px 14px;font-size:0.65rem;font-family:'Share Tech Mono',monospace;letter-spacing:0.1em;text-decoration:none;border:1px solid var(--border);color:var(--gray);transition:all 0.3s;}
 .nav-link:hover,.nav-link.active{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,0.05);}
-.menu-btn{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:5px;background:none;border:none;}
+.menu-btn{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:5px;background:none;border:none;}
 .menu-btn span{width:24px;height:2px;background:var(--blue);display:block;}
 .mobile-menu{display:none;position:fixed;top:70px;left:0;right:0;background:rgba(2,4,8,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:20px 30px;z-index:999;flex-direction:column;gap:10px;}
 .mobile-menu.open{display:flex;}
-@media(max-width:768px){.nav-links{display:none;}.menu-btn{display:flex;}.mobile-menu .nav-link{display:block;text-align:center;padding:12px;}}
+.mobile-menu .nav-link{display:block;text-align:center;padding:12px;}
 
 .page-hero{padding:140px 30px 80px;text-align:center;position:relative;overflow:hidden;}
 .page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(0,100,200,0.07) 0%,transparent 70%);}
@@ -114,7 +113,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 30px;displa
 .contact-info{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:40px;}
 @media(max-width:600px){.contact-info{grid-template-columns:1fr;}}
 .info-box{border:1px solid var(--border);padding:25px;text-align:center;}
-.info-box span{font-size:1.5rem;display:block;margin-bottom:10px;}
+.info-box .info-icon{display:flex;justify-content:center;margin-bottom:10px;color:var(--blue);}
+.info-box .info-icon svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(0,170,255,0.10));}
 .info-box h3{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;color:var(--blue);margin-bottom:5px;}
 .info-box p{font-size:0.8rem;color:var(--gray);}
 
@@ -180,13 +180,25 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
 }
 @media(max-width:768px){
   .line-float{
-    bottom:18px;
+    bottom:calc(18px + env(safe-area-inset-bottom));
     right:18px;
     width:56px;
     height:56px;
   }
   .line-float svg{width:30px;height:30px;}
   .line-float-label{display:none;}
+  body{padding-bottom:calc(74px + env(safe-area-inset-bottom));}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  .fi{opacity:1!important;transform:none!important;transition:none!important;}
+  .scanline,.line-float{animation:none!important;}
+}
+@media(max-width:400px){
+  .contact-form{padding:26px 16px;}
+  .form-input,.form-select,.form-textarea{font-size:16px;}
+  .form-check{padding:4px 0;}
+  .form-check input{width:20px;height:20px;}
 }
 .mobile-menu .line-menu-btn{
   background:linear-gradient(135deg,#06C755 0%,#00B900 100%);
@@ -208,9 +220,6 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
   height:18px;
   fill:currentColor;
 }
-/* PC版でもハンバーガー表示 */
-.menu-btn{display:flex !important;}
-.sub-nav{display:none !important;}
 
 </style>
 </head>
@@ -218,26 +227,16 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
 <div class="scanline"></div>
 <header>
   <a href="index.html" class="logo"><div class="logo-mark"><span>R7</span></div>RSS7 <em>AI</em> Works</a>
-  <nav class="nav-links">
-    <a href="index.html" class="nav-link">TOP</a>
-    <a href="services.html" class="nav-link">SERVICES</a>
-    <a href="blog.html" class="nav-link">BLOG</a>
-    <a href="about.html" class="nav-link">ABOUT</a>
-    <a href="contact.html" class="nav-link active">CONTACT</a>
-    <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
-    <a href="https://kiseki.rss7.net" class="nav-link">軌跡</a>
-  </nav>
   <button class="menu-btn" onclick="toggleMenu();this.setAttribute('aria-expanded',document.getElementById('mobileMenu').classList.contains('open')?'true':'false')" aria-label="メニュー" aria-controls="mobileMenu" aria-expanded="false"><span></span><span></span><span></span></button>
 </header>
-<div class="mobile-menu" id="mobileMenu">
+<nav class="mobile-menu" id="mobileMenu" aria-label="主要ナビゲーション">
   <a href="index.html" class="nav-link">TOP</a>
   <a href="services.html" class="nav-link">SERVICES</a>
-  <a href="blog.html" class="nav-link">BLOG</a>
+  <a href="works.html" class="nav-link">WORKS</a>
   <a href="about.html" class="nav-link">ABOUT</a>
-  <a href="contact.html" class="nav-link active">CONTACT</a>
-  <a href="https://bitframe.rss7.net" class="nav-link">BitFrame</a>
-  <a href="https://kiseki.rss7.net" class="nav-link">映像工房 軌跡</a>
-</div>
+  <a href="blog.html" class="nav-link">BLOG</a>
+  <a href="contact.html" class="nav-link active" aria-current="page">CONTACT</a>
+</nav>
 
 <div class="page-hero">
   <span class="ph-label">GET IN TOUCH</span>
@@ -248,12 +247,12 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--g
 <div class="contact-wrap">
   <div class="contact-info fi">
     <div class="info-box">
-      <span>💬</span>
+      <span class="info-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 8.5h20a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H14l-5 4v-4H6A1.5 1.5 0 0 1 4.5 20V10A1.5 1.5 0 0 1 6 8.5z"/><path d="M10 14h12M10 17.5h8"/></svg></span>
       <h3>お問い合わせ方法</h3>
       <p>お問い合わせフォームまたはLINEからご相談ください</p>
     </div>
     <div class="info-box">
-      <span>⏰</span>
+      <span class="info-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="17" r="11"/><path d="M16 9.5V17l5.5 3M11.5 4l2 2.5M20.5 4l-2 2.5"/></svg></span>
       <h3>RESPONSE TIME</h3>
       <p>1〜2営業日以内</p>
     </div>
