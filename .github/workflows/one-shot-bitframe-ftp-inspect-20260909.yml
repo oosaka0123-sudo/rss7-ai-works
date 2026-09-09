@@ -1,4 +1,4 @@
-name: One-shot BitFrame production overlay
+name: One-shot BitFrame cache inspect
 
 on:
   push:
@@ -9,33 +9,16 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  inspect:
     runs-on: ubuntu-latest
     environment: production
     env:
       DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
       DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
     steps:
-      - name: Checkout BitFrame main
-        uses: actions/checkout@v4
-        with:
-          repository: oosaka0123-sudo/bitframe
-          ref: main
-          persist-credentials: false
-      - name: Build static production overlay
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p _site
-          cp index.html works.html service.html flow-price.html contact.html _site/
-          cp -R assets _site/
-          grep -Fq 'AI CREATIVE FILM STUDIO' _site/index.html
-          if grep -Fq 'noindex,nofollow' _site/index.html; then
-            echo 'Production HTML unexpectedly contains noindex'; exit 1
-          fi
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
-      - name: Upload non-destructive production overlay
+      - name: Inspect cache directories only
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -44,15 +27,17 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          lftp <<LFTP
-          set cmd:fail-exit yes
-          set net:max-retries 2
-          set net:timeout 20
-          set ssl:verify-certificate yes
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
-          mirror --reverse --verbose=1 --parallel=2 --no-perms ./_site/ /bitframe/
-          bye
-          LFTP
-          echo 'BITFRAME_PRODUCTION_OVERLAY_COMPLETE'
+          for p in /bitframe/wp-content/cache /bitframe/wp-content/cache/wpo-cache /bitframe/wp-content/cache/page_enhanced /bitframe/wp-content/wpo-cache; do
+            echo "PATH=$p"
+            lftp -c "
+              set cmd:fail-exit no;
+              set net:max-retries 2;
+              set net:timeout 20;
+              set ssl:verify-certificate yes;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
+              cls -1 \"$p\";
+            " 2>/dev/null | sed -E 's#^/bitframe/wp-content/#wp-content/#' | grep -E '^[A-Za-z0-9._/-]+$' | head -80 || true
+          done
+          echo CACHE_INSPECTION_COMPLETE
