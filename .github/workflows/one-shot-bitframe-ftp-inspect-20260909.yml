@@ -1,4 +1,4 @@
-name: One-shot BitFrame FTP directory inspect
+name: One-shot BitFrame preview deploy
 
 on:
   push:
@@ -9,17 +9,45 @@ permissions:
   contents: read
 
 jobs:
-  inspect:
+  preview:
     runs-on: ubuntu-latest
     environment: production
     env:
       DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
       DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+      BITFRAME_ROOT: /bitframe
+      SITE_URL: https://bitframe.rss7.net
     steps:
+      - name: Checkout BitFrame main
+        uses: actions/checkout@v4
+        with:
+          repository: oosaka0123-sudo/bitframe
+          ref: main
+          persist-credentials: false
+
+      - name: Build isolated noindex preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html works.html service.html flow-price.html contact.html _site/
+          cp -R assets _site/
+          python - <<'PY'
+          from pathlib import Path
+          tag = '<meta name="robots" content="noindex,nofollow">'
+          for p in Path('_site').glob('*.html'):
+              s = p.read_text(encoding='utf-8')
+              if tag not in s:
+                  s = s.replace('</head>', tag + '</head>')
+              p.write_text(s, encoding='utf-8')
+          PY
+          grep -Fq 'AI CREATIVE FILM STUDIO' _site/index.html
+          grep -Fq 'noindex,nofollow' _site/index.html
+
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Verify BitFrame root markers only
+      - name: Upload preview only
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -31,24 +59,33 @@ jobs:
           [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || { echo "FTP secrets missing"; exit 1; }
           [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || { echo "FTP scheme invalid"; exit 1; }
           [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "FTP port invalid"; exit 1; }
+          remote="${BITFRAME_ROOT}/_renewal-preview"
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mirror --reverse --verbose=1 --parallel=2 --no-perms ./_site/ "$remote/"
+          bye
+          LFTP
+          echo "PREVIEW_UPLOAD_COMPLETE"
 
-          listing="$(lftp -c "
-            set cmd:fail-exit yes;
-            set net:max-retries 2;
-            set net:timeout 20;
-            set ssl:verify-certificate yes;
-            set ftp:ssl-force true;
-            set ftp:ssl-protect-data true;
-            open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
-            cls -1 /bitframe;
-          ")"
-
-          for marker in wp-config.php wp-content wp-admin wp-includes index.php .htaccess; do
-            if printf '%s\n' "$listing" | sed 's#/$##' | grep -Fxq "/bitframe/$marker" || printf '%s\n' "$listing" | sed 's#/$##' | grep -Fxq "$marker"; then
-              echo "MARKER_${marker//[^A-Za-z0-9]/_}=FOUND"
-            else
-              echo "MARKER_${marker//[^A-Za-z0-9]/_}=MISSING"
-            fi
+      - name: Verify preview HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${SITE_URL}/_renewal-preview"
+          home="$(curl --fail --silent --show-error "$base/")"
+          grep -Fq 'AI CREATIVE FILM STUDIO' <<< "$home"
+          grep -Fq 'noindex,nofollow' <<< "$home"
+          for page in works.html service.html flow-price.html contact.html; do
+            curl --fail --silent --show-error "$base/$page" >/dev/null
           done
-          echo "BITFRAME_ROOT=/bitframe"
-          echo "READ_ONLY_INSPECTION_COMPLETE"
+          curl --fail --silent --show-error "$base/assets/site.css" >/dev/null
+          curl --fail --silent --show-error "$base/assets/site.js" >/dev/null
+          curl --fail --silent --show-error "$base/assets/media/hero-poster.webp" >/dev/null
+          curl --fail --silent --show-error "$base/assets/media/hero.mp4" >/dev/null
+          echo "BITFRAME_PREVIEW_VERIFIED=$base/"
