@@ -1,4 +1,4 @@
-name: One-shot BitFrame DirectoryIndex probe
+name: One-shot BitFrame production preflight
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  preflight:
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
-      - name: Create isolated probe only
+      - name: Clean isolated probe and inspect conflicts
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -27,19 +27,23 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          mkdir -p /tmp/bitframe-probe
-          printf '%s' 'BITFRAME_INDEX_HTML_WINS' > /tmp/bitframe-probe/index.html
-          printf '%s' '<?php echo "BITFRAME_INDEX_PHP_WINS"; ?>' > /tmp/bitframe-probe/index.php
-          lftp <<LFTP
-          set cmd:fail-exit yes
-          set net:max-retries 2
-          set net:timeout 20
-          set ssl:verify-certificate yes
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
-          mkdir /bitframe/_directoryindex-probe
-          mirror --reverse --verbose=1 --no-perms /tmp/bitframe-probe/ /bitframe/_directoryindex-probe/
-          bye
-          LFTP
-          echo "PROBE_READY"
+          listing="$(lftp -c "
+            set cmd:fail-exit yes;
+            set net:max-retries 2;
+            set net:timeout 20;
+            set ssl:verify-certificate yes;
+            set ftp:ssl-force true;
+            set ftp:ssl-protect-data true;
+            open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
+            cls -1 /bitframe;
+            rm -r /bitframe/_directoryindex-probe;
+          ")"
+          for name in index.html works.html service.html flow-price.html contact.html assets; do
+            if printf '%s\n' "$listing" | sed 's#/$##' | grep -Eq "(^|/)$name$"; then
+              echo "CONFLICT_${name//[^A-Za-z0-9]/_}=YES"
+            else
+              echo "CONFLICT_${name//[^A-Za-z0-9]/_}=NO"
+            fi
+          done
+          echo "PROBE_CLEANED=YES"
+          echo "PREFLIGHT_COMPLETE"
