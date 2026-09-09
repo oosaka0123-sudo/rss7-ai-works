@@ -1,4 +1,4 @@
-name: One-shot BitFrame production preflight
+name: One-shot BitFrame production overlay
 
 on:
   push:
@@ -9,16 +9,33 @@ permissions:
   contents: read
 
 jobs:
-  preflight:
+  deploy:
     runs-on: ubuntu-latest
     environment: production
     env:
       DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
       DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
     steps:
+      - name: Checkout BitFrame main
+        uses: actions/checkout@v4
+        with:
+          repository: oosaka0123-sudo/bitframe
+          ref: main
+          persist-credentials: false
+      - name: Build static production overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html works.html service.html flow-price.html contact.html _site/
+          cp -R assets _site/
+          grep -Fq 'AI CREATIVE FILM STUDIO' _site/index.html
+          if grep -Fq 'noindex,nofollow' _site/index.html; then
+            echo 'Production HTML unexpectedly contains noindex'; exit 1
+          fi
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
-      - name: Clean isolated probe and inspect conflicts
+      - name: Upload non-destructive production overlay
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -27,23 +44,15 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          listing="$(lftp -c "
-            set cmd:fail-exit yes;
-            set net:max-retries 2;
-            set net:timeout 20;
-            set ssl:verify-certificate yes;
-            set ftp:ssl-force true;
-            set ftp:ssl-protect-data true;
-            open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
-            cls -1 /bitframe;
-            rm -r /bitframe/_directoryindex-probe;
-          ")"
-          for name in index.html works.html service.html flow-price.html contact.html assets; do
-            if printf '%s\n' "$listing" | sed 's#/$##' | grep -Eq "(^|/)$name$"; then
-              echo "CONFLICT_${name//[^A-Za-z0-9]/_}=YES"
-            else
-              echo "CONFLICT_${name//[^A-Za-z0-9]/_}=NO"
-            fi
-          done
-          echo "PROBE_CLEANED=YES"
-          echo "PREFLIGHT_COMPLETE"
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mirror --reverse --verbose=1 --parallel=2 --no-perms ./_site/ /bitframe/
+          bye
+          LFTP
+          echo 'BITFRAME_PRODUCTION_OVERLAY_COMPLETE'
