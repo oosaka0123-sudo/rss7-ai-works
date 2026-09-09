@@ -1,4 +1,4 @@
-name: One-shot BitFrame preview deploy
+name: One-shot BitFrame DirectoryIndex inspect
 
 on:
   push:
@@ -9,45 +9,17 @@ permissions:
   contents: read
 
 jobs:
-  preview:
+  inspect:
     runs-on: ubuntu-latest
     environment: production
     env:
       DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
       DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
-      BITFRAME_ROOT: /bitframe
-      SITE_URL: https://bitframe.rss7.net
     steps:
-      - name: Checkout BitFrame main
-        uses: actions/checkout@v4
-        with:
-          repository: oosaka0123-sudo/bitframe
-          ref: main
-          persist-credentials: false
-
-      - name: Build isolated noindex preview
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p _site
-          cp index.html works.html service.html flow-price.html contact.html _site/
-          cp -R assets _site/
-          python - <<'PY'
-          from pathlib import Path
-          tag = '<meta name="robots" content="noindex,nofollow">'
-          for p in Path('_site').glob('*.html'):
-              s = p.read_text(encoding='utf-8')
-              if tag not in s:
-                  s = s.replace('</head>', tag + '</head>')
-              p.write_text(s, encoding='utf-8')
-          PY
-          grep -Fq 'AI CREATIVE FILM STUDIO' _site/index.html
-          grep -Fq 'noindex,nofollow' _site/index.html
-
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Upload preview only
+      - name: Inspect DirectoryIndex and WordPress rewrite markers
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -56,37 +28,24 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || { echo "FTP secrets missing"; exit 1; }
-          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || { echo "FTP scheme invalid"; exit 1; }
-          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "FTP port invalid"; exit 1; }
-          remote="${BITFRAME_ROOT}/_renewal-preview"
-          lftp <<LFTP
-          set cmd:fail-exit yes
-          set net:max-retries 2
-          set net:timeout 20
-          set ssl:verify-certificate yes
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
-          mkdir "$remote"
-          mirror --reverse --verbose=1 --parallel=2 --no-perms ./_site/ "$remote/"
-          bye
-          LFTP
-          echo "PREVIEW_UPLOAD_COMPLETE"
-
-      - name: Verify preview HTTP
-        shell: bash
-        run: |
-          set -euo pipefail
-          base="${SITE_URL}/_renewal-preview"
-          home="$(curl --fail --silent --show-error "$base/")"
-          grep -Fq 'AI CREATIVE FILM STUDIO' <<< "$home"
-          grep -Fq 'noindex,nofollow' <<< "$home"
-          for page in works.html service.html flow-price.html contact.html; do
-            curl --fail --silent --show-error "$base/$page" >/dev/null
-          done
-          curl --fail --silent --show-error "$base/assets/site.css" >/dev/null
-          curl --fail --silent --show-error "$base/assets/site.js" >/dev/null
-          curl --fail --silent --show-error "$base/assets/media/hero-poster.webp" >/dev/null
-          curl --fail --silent --show-error "$base/assets/media/hero.mp4" >/dev/null
-          echo "BITFRAME_PREVIEW_VERIFIED=$base/"
+          content="$(lftp -c "
+            set cmd:fail-exit yes;
+            set net:max-retries 2;
+            set net:timeout 20;
+            set ssl:verify-certificate yes;
+            set ftp:ssl-force true;
+            set ftp:ssl-protect-data true;
+            open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
+            cat /bitframe/.htaccess;
+          ")"
+          if printf '%s\n' "$content" | grep -Eiq '^[[:space:]]*DirectoryIndex[[:space:]]+'; then
+            line="$(printf '%s\n' "$content" | grep -Ei '^[[:space:]]*DirectoryIndex[[:space:]]+' | head -1 | tr -cd 'A-Za-z0-9._ -')"
+            echo "DIRECTORYINDEX_PRESENT=YES"
+            echo "DIRECTORYINDEX_LINE=$line"
+          else
+            echo "DIRECTORYINDEX_PRESENT=NO"
+          fi
+          if printf '%s\n' "$content" | grep -Fq 'index.php'; then echo "INDEX_PHP_REFERENCED=YES"; else echo "INDEX_PHP_REFERENCED=NO"; fi
+          if printf '%s\n' "$content" | grep -Eiq 'RewriteEngine[[:space:]]+On'; then echo "REWRITE_ENGINE=ON"; else echo "REWRITE_ENGINE=UNKNOWN"; fi
+          if printf '%s\n' "$content" | grep -Eiq 'RewriteRule.*index\.php'; then echo "WORDPRESS_INDEX_REWRITE=YES"; else echo "WORDPRESS_INDEX_REWRITE=NO"; fi
+          echo "READ_ONLY_INSPECTION_COMPLETE"
