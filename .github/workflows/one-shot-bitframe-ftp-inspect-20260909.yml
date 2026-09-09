@@ -1,4 +1,4 @@
-name: One-shot BitFrame DirectoryIndex inspect
+name: One-shot BitFrame DirectoryIndex probe
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  inspect:
+  probe:
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -18,8 +18,7 @@ jobs:
     steps:
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
-
-      - name: Inspect DirectoryIndex and WordPress rewrite markers
+      - name: Create isolated probe only
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -28,24 +27,19 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          content="$(lftp -c "
-            set cmd:fail-exit yes;
-            set net:max-retries 2;
-            set net:timeout 20;
-            set ssl:verify-certificate yes;
-            set ftp:ssl-force true;
-            set ftp:ssl-protect-data true;
-            open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
-            cat /bitframe/.htaccess;
-          ")"
-          if printf '%s\n' "$content" | grep -Eiq '^[[:space:]]*DirectoryIndex[[:space:]]+'; then
-            line="$(printf '%s\n' "$content" | grep -Ei '^[[:space:]]*DirectoryIndex[[:space:]]+' | head -1 | tr -cd 'A-Za-z0-9._ -')"
-            echo "DIRECTORYINDEX_PRESENT=YES"
-            echo "DIRECTORYINDEX_LINE=$line"
-          else
-            echo "DIRECTORYINDEX_PRESENT=NO"
-          fi
-          if printf '%s\n' "$content" | grep -Fq 'index.php'; then echo "INDEX_PHP_REFERENCED=YES"; else echo "INDEX_PHP_REFERENCED=NO"; fi
-          if printf '%s\n' "$content" | grep -Eiq 'RewriteEngine[[:space:]]+On'; then echo "REWRITE_ENGINE=ON"; else echo "REWRITE_ENGINE=UNKNOWN"; fi
-          if printf '%s\n' "$content" | grep -Eiq 'RewriteRule.*index\.php'; then echo "WORDPRESS_INDEX_REWRITE=YES"; else echo "WORDPRESS_INDEX_REWRITE=NO"; fi
-          echo "READ_ONLY_INSPECTION_COMPLETE"
+          mkdir -p /tmp/bitframe-probe
+          printf '%s' 'BITFRAME_INDEX_HTML_WINS' > /tmp/bitframe-probe/index.html
+          printf '%s' '<?php echo "BITFRAME_INDEX_PHP_WINS"; ?>' > /tmp/bitframe-probe/index.php
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mkdir /bitframe/_directoryindex-probe
+          mirror --reverse --verbose=1 --no-perms /tmp/bitframe-probe/ /bitframe/_directoryindex-probe/
+          bye
+          LFTP
+          echo "PROBE_READY"
