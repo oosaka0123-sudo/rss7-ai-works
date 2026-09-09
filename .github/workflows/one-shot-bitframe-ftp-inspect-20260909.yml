@@ -1,4 +1,4 @@
-name: One-shot BitFrame cache inspect
+name: One-shot BitFrame legacy service deploy
 
 on:
   push:
@@ -9,16 +9,28 @@ permissions:
   contents: read
 
 jobs:
-  inspect:
+  deploy:
     runs-on: ubuntu-latest
     environment: production
     env:
       DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
       DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
     steps:
+      - name: Checkout BitFrame main
+        uses: actions/checkout@v4
+        with:
+          repository: oosaka0123-sudo/bitframe
+          ref: main
+          persist-credentials: false
+      - name: Verify compatibility page
+        run: |
+          set -euo pipefail
+          test -f service/index.html
+          grep -Fq '<base href="/">' service/index.html
+          grep -Fq 'https://bitframe.rss7.net/service.html' service/index.html
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
-      - name: Inspect cache directories only
+      - name: Upload only legacy service compatibility directory
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -27,17 +39,16 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          for p in /bitframe/wp-content/cache /bitframe/wp-content/cache/wpo-cache /bitframe/wp-content/cache/page_enhanced /bitframe/wp-content/wpo-cache; do
-            echo "PATH=$p"
-            lftp -c "
-              set cmd:fail-exit no;
-              set net:max-retries 2;
-              set net:timeout 20;
-              set ssl:verify-certificate yes;
-              set ftp:ssl-force true;
-              set ftp:ssl-protect-data true;
-              open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
-              cls -1 \"$p\";
-            " 2>/dev/null | sed -E 's#^/bitframe/wp-content/#wp-content/#' | grep -E '^[A-Za-z0-9._/-]+$' | head -80 || true
-          done
-          echo CACHE_INSPECTION_COMPLETE
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mkdir /bitframe/service
+          mirror --reverse --verbose=1 --no-perms ./service/ /bitframe/service/
+          bye
+          LFTP
+          echo LEGACY_SERVICE_DEPLOY_COMPLETE
