@@ -1,0 +1,52 @@
+name: One-shot BitFrame FTP directory inspect
+
+on:
+  push:
+    branches:
+      - ops/bitframe-ftp-inspect-20260909
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+    steps:
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Inspect BitFrame-related remote names only
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]] || { echo "FTP secrets missing"; exit 1; }
+          [[ "$DEPLOY_SCHEME" =~ ^(ftp|ftps)$ ]] || { echo "FTP scheme invalid"; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "FTP port invalid"; exit 1; }
+
+          listing="$(lftp -c "
+            set cmd:fail-exit yes;
+            set net:max-retries 2;
+            set net:timeout 20;
+            set ssl:verify-certificate yes;
+            set ftp:ssl-force true;
+            set ftp:ssl-protect-data true;
+            open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
+            cls -1 /;
+          ")"
+
+          matches="$(printf '%s\n' "$listing" | sed 's#/$##' | grep -Ei '(^|[-_.])(bitframe|rss7)($|[-_.])|bitframe|rss7' | grep -E '^[A-Za-z0-9._/-]+$' || true)"
+          if [[ -z "$matches" ]]; then
+            echo "BITFRAME_MATCHES=NONE"
+          else
+            printf '%s\n' "$matches" | sed 's#^#BITFRAME_MATCH=#'
+          fi
+          echo "READ_ONLY_INSPECTION_COMPLETE"
