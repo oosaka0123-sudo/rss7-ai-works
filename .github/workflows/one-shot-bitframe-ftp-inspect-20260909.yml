@@ -19,7 +19,7 @@ jobs:
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Inspect BitFrame-related remote names only
+      - name: Verify BitFrame root markers only
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -40,13 +40,15 @@ jobs:
             set ftp:ssl-force true;
             set ftp:ssl-protect-data true;
             open -u \"$DEPLOY_USER\",\"$DEPLOY_PASSWORD\" \"$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT\";
-            cls -1 /;
+            cls -1 /bitframe;
           ")"
 
-          matches="$(printf '%s\n' "$listing" | sed 's#/$##' | grep -Ei '(^|[-_.])(bitframe|rss7)($|[-_.])|bitframe|rss7' | grep -E '^[A-Za-z0-9._/-]+$' || true)"
-          if [[ -z "$matches" ]]; then
-            echo "BITFRAME_MATCHES=NONE"
-          else
-            printf '%s\n' "$matches" | sed 's#^#BITFRAME_MATCH=#'
-          fi
+          for marker in wp-config.php wp-content wp-admin wp-includes index.php .htaccess; do
+            if printf '%s\n' "$listing" | sed 's#/$##' | grep -Fxq "/bitframe/$marker" || printf '%s\n' "$listing" | sed 's#/$##' | grep -Fxq "$marker"; then
+              echo "MARKER_${marker//[^A-Za-z0-9]/_}=FOUND"
+            else
+              echo "MARKER_${marker//[^A-Za-z0-9]/_}=MISSING"
+            fi
+          done
+          echo "BITFRAME_ROOT=/bitframe"
           echo "READ_ONLY_INSPECTION_COMPLETE"
