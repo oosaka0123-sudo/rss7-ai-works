@@ -1,0 +1,69 @@
+name: One-shot BitFrame editorial preview
+
+on:
+  push:
+    branches:
+      - ops/bitframe-ftp-inspect-20260909
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+    steps:
+      - name: Checkout BitFrame main
+        uses: actions/checkout@v4
+        with:
+          repository: oosaka0123-sudo/bitframe
+          ref: main
+          persist-credentials: false
+      - name: Build noindex preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html works.html service.html flow-price.html contact.html _site/
+          cp -R assets _site/
+          python - <<'PY'
+          from pathlib import Path
+          for p in Path('_site').glob('*.html'):
+              s=p.read_text(encoding='utf-8')
+              s=s.replace('<head>', '<head><meta name="robots" content="noindex,nofollow">', 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+          grep -Fq 'つくる速度を、' _site/index.html
+          grep -Fq 'noindex,nofollow' _site/index.html
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+      - name: Upload preview only
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          lftp <<LFTP
+          set cmd:fail-exit no
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mkdir /bitframe/_renewal-preview
+          mirror --reverse --verbose=1 --parallel=2 --no-perms ./_site/ /bitframe/_renewal-preview/
+          bye
+          LFTP
+      - name: Verify preview HTTP
+        run: |
+          set -euo pipefail
+          for p in '' works.html service.html flow-price.html contact.html; do curl -fsS "https://bitframe.rss7.net/_renewal-preview/$p" >/dev/null; done
+          curl -fsS https://bitframe.rss7.net/_renewal-preview/ | grep -Fq 'つくる速度を、'
+          echo BITFRAME_EDITORIAL_PREVIEW_OK
