@@ -50,6 +50,8 @@ h1 span{display:block;color:transparent;-webkit-text-stroke:1px var(--blue);}
 .s-title strong{color:var(--cyan);font-weight:700;}
 .work-list{border-top:1px solid var(--border);}
 .work{display:grid;grid-template-columns:110px minmax(0,1.25fr) minmax(280px,.75fr);gap:42px;padding:58px 0;border-bottom:1px solid var(--border);position:relative;}
+.work-visual{grid-column:1/-1;aspect-ratio:21/9;overflow:hidden;border:1px solid var(--border);background:#020408;margin-bottom:6px;}
+.work-visual img{width:100%;height:100%;object-fit:cover;display:block;}
 .work-index{font-family:'Orbitron',monospace;font-size:clamp(2.8rem,5vw,5rem);font-weight:900;color:rgba(0,170,255,.16);line-height:1;}
 .work-type{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.23em;color:var(--blue);margin-bottom:12px;display:block;}
 .work h2{font-size:clamp(1.5rem,3vw,2.35rem);line-height:1.3;margin-bottom:18px;}
@@ -83,7 +85,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--gr
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease;}
 .reveal.v{opacity:1;transform:none;}
 @media(max-width:900px){.section-head{grid-template-columns:1fr;gap:12px}.work{grid-template-columns:78px 1fr}.work-facts{grid-column:2;border-left:0;border-top:1px solid var(--border);padding:22px 0 0}.legend-inner{grid-template-columns:1fr;gap:18px}}
-@media(max-width:768px){.page-hero{min-height:64vh;padding:125px 20px 70px}.section{padding:72px 20px}.hero-meta{display:grid;grid-template-columns:1fr 1fr}.hero-meta span{border-right:0;margin-right:0;padding-top:14px}.work{grid-template-columns:1fr;gap:16px;padding:44px 0}.work-index{font-size:2.3rem}.work-facts{grid-column:auto}.legend-inner{padding:52px 20px}.cta{padding:78px 20px 110px}.line-float{width:56px;height:56px;right:18px;bottom:max(18px,env(safe-area-inset-bottom))}body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}}
+@media(max-width:768px){.page-hero{min-height:64vh;padding:125px 20px 70px}.section{padding:72px 20px}.hero-meta{display:grid;grid-template-columns:1fr 1fr}.hero-meta span{border-right:0;margin-right:0;padding-top:14px}.work{grid-template-columns:1fr;gap:16px;padding:44px 0}.work-index{font-size:2.3rem}.work-facts{grid-column:auto}.work-visual{aspect-ratio:16/9}.legend-inner{padding:52px 20px}.cta{padding:78px 20px 110px}.line-float{width:56px;height:56px;right:18px;bottom:max(18px,env(safe-area-inset-bottom))}body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}}
 @media(max-width:430px){h1{font-size:clamp(2.65rem,14vw,4.1rem)}.hero-meta{grid-template-columns:1fr}.hero-lead,.work p,.legend p{font-size:.9rem}.btn-p,.btn-s{width:100%}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.work-link::after,.line-float{transition:none}}
 </style>
@@ -109,6 +111,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--gr
   <div class="section-head reveal"><div class="s-label">SELECTED WORKS</div><h2 class="s-title" id="works-title">言葉より先に、<strong>公開された成果物</strong>を見てもらう。</h2></div>
   <div class="work-list">
     <article class="work reveal">
+      <div class="work-visual"><img src="images/showcase/claude-code-classroom.svg" width="480" height="270" alt="Claude Code教室の学習コンテンツを表すイメージイラスト" loading="lazy" decoding="async"></div>
       <div class="work-index" aria-hidden="true">01</div>
       <div>
         <span class="work-type">PUBLIC WEBSITE / EDUCATION</span>
@@ -119,6 +122,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--gr
       <dl class="work-facts"><div class="fact"><dt>TYPE</dt><dd>公開Webサイト</dd></div><div class="fact"><dt>FOCUS</dt><dd>AI開発 / 学習コンテンツ</dd></div><div class="fact"><dt>DELIVERY</dt><dd>スマホから閲覧できる公開サイト</dd></div></dl>
     </article>
     <article class="work reveal">
+      <div class="work-visual"><img src="images/showcase/ai-development.svg" width="480" height="270" alt="複数AIエージェントによる開発フローを表すイメージイラスト" loading="lazy" decoding="async"></div>
       <div class="work-index" aria-hidden="true">02</div>
       <div>
         <span class="work-type">RESEARCH / DEVELOPMENT</span>
@@ -129,6 +133,7 @@ footer p{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--gr
       <dl class="work-facts"><div class="fact"><dt>TYPE</dt><dd>研究・開発プロジェクト</dd></div><div class="fact"><dt>FOCUS</dt><dd>Multi-AI / GitHub / 自動化</dd></div><div class="fact"><dt>DELIVERY</dt><dd>GitHub Pages公開サイト</dd></div></dl>
     </article>
     <article class="work reveal">
+      <div class="work-visual"><img src="images/showcase/nyoganji-temple.svg" width="480" height="270" alt="如願寺デモの和の世界観を表すイメージイラスト" loading="lazy" decoding="async"></div>
       <div class="work-index" aria-hidden="true">03</div>
       <div>
         <span class="work-type">WEBSITE REDESIGN DEMO</span>
