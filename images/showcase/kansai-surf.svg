@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-labelledby="kansaiTitle">
+<title id="kansaiTitle">関西サーファーKSの波情報サービスを表す、波とサーフボードの抽象イラスト</title>
+<defs>
+<linearGradient id="ksg" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#0a1520"/>
+<stop offset="100%" stop-color="#020408"/>
+</linearGradient>
+</defs>
+<rect width="480" height="270" fill="url(#ksg)"/>
+<g fill="none" stroke="#00aaff" stroke-width="2">
+<path d="M20 190 Q60 160 100 190 T180 190 T260 190 T340 190 T420 190 T460 190"/>
+</g>
+<g fill="none" stroke="#00ffee" stroke-width="1.6" opacity="0.7">
+<path d="M20 214 Q60 190 100 214 T180 214 T260 214 T340 214 T420 214 T460 214"/>
+</g>
+<g fill="none" stroke="#0f3a55" stroke-width="1.4" opacity="0.6">
+<path d="M20 238 Q60 220 100 238 T180 238 T260 238 T340 238 T420 238 T460 238"/>
+</g>
+<g transform="translate(210 60) rotate(18)">
+<path d="M18 0 C30 40 30 120 18 170 C6 120 6 40 18 0 Z" fill="#0a1520" stroke="#00ffee" stroke-width="2.2"/>
+<line x1="18" y1="20" x2="18" y2="150" stroke="#00aaff" stroke-width="1.2" opacity="0.7"/>
+</g>
+<circle cx="380" cy="55" r="22" fill="none" stroke="#00ffee" stroke-width="1.4" opacity="0.7"/>
+</svg>

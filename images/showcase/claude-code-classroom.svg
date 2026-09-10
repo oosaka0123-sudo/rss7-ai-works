@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-labelledby="ccTitle">
+<title id="ccTitle">Claude Code教室を表す、黒板とチャット吹き出しの抽象イラスト</title>
+<defs>
+<linearGradient id="ccg" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#0a1520"/>
+<stop offset="100%" stop-color="#020408"/>
+</linearGradient>
+</defs>
+<rect width="480" height="270" fill="url(#ccg)"/>
+<rect x="40" y="36" width="290" height="170" rx="6" fill="none" stroke="#0f3a55" stroke-width="2"/>
+<rect x="40" y="36" width="290" height="170" rx="6" fill="#00aaff" opacity="0.04"/>
+<g fill="none" stroke="#00aaff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M110 90 L80 118 L110 146"/>
+<path d="M180 90 L210 118 L180 146"/>
+<line x1="150" y1="80" x2="140" y2="156" stroke="#00ffee"/>
+</g>
+<g fill="#7898b8" opacity="0.7">
+<rect x="70" y="168" width="120" height="6" rx="3"/>
+<rect x="70" y="182" width="80" height="6" rx="3"/>
+</g>
+<g transform="translate(300 150)">
+<rect x="0" y="0" width="150" height="86" rx="14" fill="#0a1520" stroke="#00ffee" stroke-width="2"/>
+<path d="M20 86 L20 106 L44 86 Z" fill="#0a1520" stroke="#00ffee" stroke-width="2"/>
+<circle cx="34" cy="30" r="5" fill="#00ffee"/>
+<circle cx="58" cy="30" r="5" fill="#00aaff"/>
+<circle cx="82" cy="30" r="5" fill="#00ffee"/>
+<rect x="22" y="52" width="106" height="5" rx="2.5" fill="#7898b8"/>
+<rect x="22" y="64" width="70" height="5" rx="2.5" fill="#7898b8" opacity="0.7"/>
+</g>
+<g stroke="#0f3a55" stroke-width="1.5" opacity="0.6">
+<line x1="60" y1="230" x2="420" y2="230"/>
+<line x1="90" y1="230" x2="90" y2="216"/>
+<line x1="160" y1="230" x2="160" y2="216"/>
+<line x1="230" y1="230" x2="230" y2="216"/>
+</g>
+</svg>
