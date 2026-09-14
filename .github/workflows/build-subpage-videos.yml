@@ -1,0 +1,29 @@
+name: Build subpage videos
+on:
+  push:
+    branches: [video-final]
+    paths: ['assets/video-build/READY']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild optimized MP4 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/video
+          cat assets/video-build/15547.part* | base64 -d > assets/video/about.mp4
+          cat assets/video-build/15548.part* | base64 -d > assets/video/services.mp4
+          cat assets/video-build/15549.part* | base64 -d > assets/video/works.mp4
+          test -s assets/video/about.mp4
+          test -s assets/video/services.mp4
+          test -s assets/video/works.mp4
+          rm -rf assets/video-build
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/video assets/video-build
+          git commit -m 'feat: add optimized subpage video assets'
+          git push
