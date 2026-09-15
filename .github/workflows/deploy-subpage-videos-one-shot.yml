@@ -36,8 +36,17 @@ jobs:
           test -s assets/video/about.mp4
           test -s assets/video/services.mp4
           test -s assets/video/works.mp4
+
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Build isolated upload set
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/rss7-stage/assets/video
+          cp about.html services.html works.html sitemap.xml /tmp/rss7-stage/
+          cp assets/video/about.mp4 assets/video/services.mp4 assets/video/works.mp4 /tmp/rss7-stage/assets/video/
 
       - name: Upload subpages and videos only
         shell: bash
@@ -57,16 +66,10 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
-          mkdir -p "$root/assets/video"
-          put about.html -o "$root/about.html"
-          put services.html -o "$root/services.html"
-          put works.html -o "$root/works.html"
-          put sitemap.xml -o "$root/sitemap.xml"
-          put assets/video/about.mp4 -o "$root/assets/video/about.mp4"
-          put assets/video/services.mp4 -o "$root/assets/video/services.mp4"
-          put assets/video/works.mp4 -o "$root/assets/video/works.mp4"
+          mirror --reverse --verbose=1 --parallel=2 --no-perms /tmp/rss7-stage/ "$root/"
           bye
           LFTP
+
       - name: Verify live pages and video assets
         shell: bash
         run: |
