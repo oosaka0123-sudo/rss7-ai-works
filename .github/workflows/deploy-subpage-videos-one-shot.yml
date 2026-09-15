@@ -33,12 +33,17 @@ jobs:
           set -euo pipefail
           [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]]
           [[ "${SITE_URL%/}" == "https://rss7.net" ]]
+          test -s index.html
+          test -s about.html
+          test -s services.html
+          test -s works.html
+          test -s sitemap.xml
           test -s assets/video/about.mp4
           test -s assets/video/services.mp4
           test -s assets/video/works.mp4
           command -v curl >/dev/null
 
-      - name: Upload subpages and videos with curl
+      - name: Upload current static pages and videos with curl
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -50,6 +55,7 @@ jobs:
           root="${DEPLOY_DIR%/}"
           base="${DEPLOY_SCHEME}://${DEPLOY_HOST}:${DEPLOY_PORT}${root}"
           upload() { curl --fail --silent --show-error --ssl-reqd --ftp-create-dirs --user "$DEPLOY_USER:$DEPLOY_PASSWORD" -T "$1" "$base/$2"; }
+          upload index.html index.html
           upload about.html about.html
           upload services.html services.html
           upload works.html works.html
@@ -58,17 +64,19 @@ jobs:
           upload assets/video/services.mp4 assets/video/services.mp4
           upload assets/video/works.mp4 assets/video/works.mp4
 
-      - name: Verify live pages and video assets
+      - name: Verify live pages, sitemap and video assets
         shell: bash
         run: |
           set -euo pipefail
           base="${SITE_URL%/}"
+          curl --fail --silent --show-error "$base/?deploy=${GITHUB_SHA}" | grep -Fq 'AI DEVELOPMENT'
           curl --fail --silent --show-error "$base/about.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/about.mp4'
           curl --fail --silent --show-error "$base/services.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/services.mp4'
           curl --fail --silent --show-error "$base/works.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/works.mp4'
+          curl --fail --silent --show-error "$base/sitemap.xml?deploy=${GITHUB_SHA}" | grep -Fq '<lastmod>2026-09-15</lastmod>'
           for media in about services works; do
             curl --fail --silent --show-error --range 0-31 "$base/assets/video/$media.mp4?deploy=${GITHUB_SHA}" >/dev/null
           done
-          echo "Subpage videos are live."
+          echo "Static production pages and subpage videos are live."
 
-# retrigger: autonomous-completion-2026-09-15-1444
+# retrigger: deploy-latest-main-2026-09-15
