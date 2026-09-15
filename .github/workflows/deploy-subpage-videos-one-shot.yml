@@ -71,4 +71,4 @@ jobs:
           done
           echo "Subpage videos are live."
 
-# retrigger: curl-upload-2026-09-15
+# retrigger: autonomous-completion-2026-09-15-1444
