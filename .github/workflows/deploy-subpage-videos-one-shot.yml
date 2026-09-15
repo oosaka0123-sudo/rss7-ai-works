@@ -69,14 +69,14 @@ jobs:
         run: |
           set -euo pipefail
           base="${SITE_URL%/}"
-          curl --fail --silent --show-error "$base/?deploy=${GITHUB_SHA}" | grep -Fq 'AI DEVELOPMENT'
-          curl --fail --silent --show-error "$base/about.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/about.mp4'
-          curl --fail --silent --show-error "$base/services.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/services.mp4'
-          curl --fail --silent --show-error "$base/works.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/works.mp4'
-          curl --fail --silent --show-error "$base/sitemap.xml?deploy=${GITHUB_SHA}" | grep -Fq '<lastmod>2026-09-15</lastmod>'
+          curl --fail --silent --show-error --max-time 20 "$base/?deploy=${GITHUB_SHA}" | grep -Fq 'AI DEVELOPMENT'
+          curl --fail --silent --show-error --max-time 20 "$base/about.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/about.mp4'
+          curl --fail --silent --show-error --max-time 20 "$base/services.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/services.mp4'
+          curl --fail --silent --show-error --max-time 20 "$base/works.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/works.mp4'
+          curl --fail --silent --show-error --max-time 20 "$base/sitemap.xml?deploy=${GITHUB_SHA}" | grep -Fq '<lastmod>2026-09-15</lastmod>'
           for media in about services works; do
-            curl --fail --silent --show-error --range 0-31 "$base/assets/video/$media.mp4?deploy=${GITHUB_SHA}" >/dev/null
+            curl --fail --silent --show-error --head --max-time 20 "$base/assets/video/$media.mp4?deploy=${GITHUB_SHA}" >/dev/null
           done
           echo "Static production pages and subpage videos are live."
 
-# retrigger: deploy-latest-main-2026-09-15
+# retrigger: bounded-verification-2026-09-15
