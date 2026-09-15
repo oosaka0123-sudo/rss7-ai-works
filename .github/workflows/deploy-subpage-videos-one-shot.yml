@@ -82,3 +82,5 @@ jobs:
             curl --fail --silent --show-error --range 0-31 "$base/assets/video/$media.mp4" >/dev/null
           done
           echo "Subpage videos are live."
+
+# retrigger: 2026-09-15
