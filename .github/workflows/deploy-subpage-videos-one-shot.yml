@@ -1,0 +1,81 @@
+name: One-shot subpage video deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-subpage-videos-one-shot.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+      DEPLOY_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+      DEPLOY_DIR: ${{ vars.LOLIPOP_DEPLOY_DIR }}
+      SITE_URL: ${{ vars.LOLIPOP_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate target
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          [[ -n "$DEPLOY_HOST" && -n "$DEPLOY_USER" && -n "$DEPLOY_PASSWORD" ]]
+          [[ "${SITE_URL%/}" == "https://rss7.net" ]]
+          test -s assets/video/about.mp4
+          test -s assets/video/services.mp4
+          test -s assets/video/works.mp4
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload subpages and videos only
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          DEPLOY_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          root="${DEPLOY_DIR%/}"
+          lftp <<LFTP
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ssl:verify-certificate yes
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
+          mkdir -p "$root/assets/video"
+          put about.html -o "$root/about.html"
+          put services.html -o "$root/services.html"
+          put works.html -o "$root/works.html"
+          put sitemap.xml -o "$root/sitemap.xml"
+          put assets/video/about.mp4 -o "$root/assets/video/about.mp4"
+          put assets/video/services.mp4 -o "$root/assets/video/services.mp4"
+          put assets/video/works.mp4 -o "$root/assets/video/works.mp4"
+          bye
+          LFTP
+      - name: Verify live pages and video assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${SITE_URL%/}"
+          curl --fail --silent --show-error "$base/about.html" | grep -Fq 'assets/video/about.mp4'
+          curl --fail --silent --show-error "$base/services.html" | grep -Fq 'assets/video/services.mp4'
+          curl --fail --silent --show-error "$base/works.html" | grep -Fq 'assets/video/works.mp4'
+          for media in about services works; do
+            curl --fail --silent --show-error --range 0-31 "$base/assets/video/$media.mp4" >/dev/null
+          done
+          echo "Subpage videos are live."
