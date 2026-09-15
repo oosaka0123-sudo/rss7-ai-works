@@ -1,28 +1,20 @@
 # RSS7 AI Works — HANDOFF
 
-Updated: 2026-09-15 15:47 JST
+Updated: 2026-09-15 16:05 JST
 Repository: `oosaka0123-sudo/rss7-ai-works`
 Branch: `main`
 Site: `https://rss7.net`
 
 ## Current state
 
-The site is in production. The latest `main` before this handoff was `0ecd3769b142874d8c6731cb4eaf5fabc78cf506` (`chore: retrigger subpage video production deploy`).
-
-The current task was to place the three supplied promotional videos on subpages only, without changing the top page.
-
-Implemented mapping:
+The site is in production. The three supplied promotional videos are implemented on subpages only:
 
 - `ABOUT` → `assets/video/about.mp4`
 - `SERVICES` → `assets/video/services.mp4`
 - `WORKS` → `assets/video/works.mp4`
 - TOP page → no video added by this task
 
-The source pages already reference the correct files:
-
-- `about.html` → `assets/video/about.mp4`
-- `services.html` → `assets/video/services.mp4`
-- `works.html` → `assets/video/works.mp4`
+The source pages reference the correct files and the live assets are available.
 
 ## Video presentation decisions
 
@@ -34,44 +26,58 @@ Current direction:
 - Keep headings/descriptions outside the video frame rather than placing large text over the footage.
 - 16:9 presentation.
 - `autoplay muted loop playsinline preload="metadata"`.
-- Pause off-screen video with `IntersectionObserver` where implemented.
+- Pause off-screen video with `IntersectionObserver`.
 - Respect `prefers-reduced-motion`.
 - Maintain mobile readability and avoid horizontal overflow.
 
 ## Production deploy
 
-A dedicated workflow exists:
+Dedicated workflow:
 
 `.github/workflows/deploy-subpage-videos-one-shot.yml`
 
-It uploads:
+Production deploy run:
 
-- `about.html`
-- `services.html`
-- `works.html`
-- `sitemap.xml`
-- `assets/video/about.mp4`
-- `assets/video/services.mp4`
-- `assets/video/works.mp4`
+- Run ID: `34934631455`
+- Job ID: `104269789354`
+- Result: **success**
+- Verification log ended with `Subpage videos are live.`
 
-The workflow was retriggered from commit `0ecd3769b142874d8c6731cb4eaf5fabc78cf506`.
+The workflow uploaded `about.html`, `services.html`, `works.html`, `sitemap.xml` and all three MP4 files, then verified the live pages and video assets on `https://rss7.net`.
 
-Run ID: `34934631455`
-Job ID: `104269789354`
-Result: **success**
+## Post-handoff QA completed
 
-The verification step checked the live pages on `https://rss7.net` for the corresponding video references and performed HTTP range requests against all three live MP4 files. The job log ended with `Subpage videos are live.`
+A real Chromium/Playwright check was run on PC02 against the production site at both desktop (`1440x1000`) and mobile (`390x844`) widths.
 
-## Connectivity at handoff
+Results for TOP / ABOUT / SERVICES / WORKS:
 
-Remote Desktop Commander was rechecked after a temporary disconnect.
+- HTTP status: all `200`
+- horizontal overflow: `0px` on desktop and mobile
+- hamburger menu: opens correctly and sets `aria-expanded="true"`
+- console/page errors: none detected
+- broken images after scrolling/lazy-load: none detected
+- TOP page: no promotional video present
+- ABOUT / SERVICES / WORKS: correct MP4 loaded, `readyState=4`, muted, looping, inline playback and actively playing while visible
+- off-screen pause/resume: all three videos pause when scrolled away and resume when scrolled back into view
 
-Last verified status:
+Internal production links checked and returning `200` include:
 
-- PC01 / `TABLET-KLJ5CN5I` — online, auth token valid
-- PC02 / `ks-pc02` — online, auth token valid
+- `/`
+- `/index.html`
+- `/services.html`
+- `/works.html`
+- `/about.html`
+- `/blog.html`
+- `/contact.html`
+- `/privacy.html`
+- `/demos/nyoganji/`
+- service anchors and contact query links checked from the main pages
 
-Do not assume a connection failure is permanent. If a remote operation fails, recheck device state and continue through GitHub Actions or another available route instead of stopping the whole task.
+The six showcase SVG assets used on TOP/WORKS also return HTTP `200`.
+
+## Connectivity
+
+Remote Desktop Commander was rechecked during QA. PC02 was usable for the automated browser test. PC01/PC02 may temporarily disconnect; recheck before treating a disconnect as permanent.
 
 ## User's execution rule
 
@@ -86,11 +92,10 @@ The user explicitly requested autonomous completion:
 ## Next session — start here
 
 1. Read this `HANDOFF.md` first.
-2. Confirm `main` is current and inspect any commits after this handoff.
-3. Verify the three live pages visually on desktop and mobile widths, especially video sizing, text readability, menu operation, and horizontal overflow.
-4. Verify `ABOUT`, `SERVICES`, and `WORKS` videos autoplay muted where allowed and loop correctly; ensure off-screen pausing does not break resume behavior.
-5. Check TOP has not unintentionally received one of these three videos.
-6. If visual issues are found, fix directly, redeploy, and repeat verification without waiting for user confirmation.
+2. Confirm `main` and inspect commits after this handoff.
+3. The three-video task is complete and production-verified; do not redo it unless a regression is reported.
+4. Continue with the user's next RSS7 AI Works improvement request.
+5. Preserve the no-heavy-overlay decision unless the user explicitly changes direction.
 
 ## Important design context
 
