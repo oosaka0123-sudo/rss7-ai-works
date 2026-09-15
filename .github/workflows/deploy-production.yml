@@ -117,8 +117,11 @@ jobs:
             exit 0
           fi
 
-          [[ -n "$RSS7_ADMIN_PASSWORD" ]] \
-            || { echo "Server API config is missing. Add production Environment secret RSS7_ADMIN_PASSWORD, then run the workflow again."; exit 1; }
+          if [[ -z "$RSS7_ADMIN_PASSWORD" ]]; then
+            echo "Server API config is missing and RSS7_ADMIN_PASSWORD is unset; preserving the remote API and deploying static files only."
+            echo "SKIP_API_UPLOAD=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
           (( ${#RSS7_ADMIN_PASSWORD} >= 12 )) \
             || { echo "RSS7_ADMIN_PASSWORD must be at least 12 characters."; exit 1; }
 
@@ -180,6 +183,10 @@ jobs:
         run: |
           set -euo pipefail
           set +x
+          exclude_pattern='(^|/)api/config[.](local|example)[.]php$|(^|/)data/articles[.]json$|(^|/)images/blog/.*[.](jpe?g|png|webp|gif)$|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)[.]gitignore$|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md|README[.]md)$|[.]zip$'
+          if [[ "${SKIP_API_UPLOAD:-0}" == "1" ]]; then
+            exclude_pattern='(^|/)api(/|$)|(^|/)data/articles[.]json$|(^|/)images/blog/.*[.](jpe?g|png|webp|gif)$|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)[.]gitignore$|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md|README[.]md)$|[.]zip$'
+          fi
           lftp <<LFTP
           set cmd:fail-exit yes
           set net:max-retries 2
@@ -189,7 +196,7 @@ jobs:
           set ftp:ssl-protect-data true
           open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
           mirror --reverse --verbose=1 --parallel=2 --no-perms \
-            --exclude='(^|/)api/config[.](local|example)[.]php$|(^|/)data/articles[.]json$|(^|/)images/blog/.*[.](jpe?g|png|webp|gif)$|(^|/)[.]git(/|$)|(^|/)[.]github(/|$)|(^|/)[.]gitignore$|(^|/)docs(/|$)|(^|/)scripts(/|$)|(^|/)(AGENTS[.]md|PROJECT_SPEC[.]md|README[.]md)$|[.]zip$' \
+            --exclude="$exclude_pattern" \
             ./ "$DEPLOY_DIR"
           bye
           LFTP
@@ -199,6 +206,18 @@ jobs:
         run: |
           set -euo pipefail
           SITE_URL="${SITE_URL%/}"
+          if [[ "${SKIP_API_UPLOAD:-0}" == "1" ]]; then
+            for attempt in 1 2 3 4 5 6; do
+              page="$(curl --fail --silent --show-error "$SITE_URL/?deploy=$DEPLOY_SHA" || true)"
+              if grep -Fq 'CURRENT AI DEVELOPMENT' <<< "$page"; then
+                echo "Static production update verified; remote API was preserved because server config is unavailable."
+                exit 0
+              fi
+              sleep 5
+            done
+            echo "Static production verification failed."
+            exit 1
+          fi
           verified=false
           for attempt in 1 2 3 4 5 6; do
             page="$(curl --fail --silent --show-error "$SITE_URL/contact.html?deploy=$DEPLOY_SHA" || true)"
