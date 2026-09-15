@@ -36,19 +36,9 @@ jobs:
           test -s assets/video/about.mp4
           test -s assets/video/services.mp4
           test -s assets/video/works.mp4
+          command -v curl >/dev/null
 
-      - name: Install lftp
-        run: sudo apt-get update && sudo apt-get install -y lftp
-
-      - name: Build isolated upload set
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/rss7-stage/assets/video
-          cp about.html services.html works.html sitemap.xml /tmp/rss7-stage/
-          cp assets/video/about.mp4 assets/video/services.mp4 assets/video/works.mp4 /tmp/rss7-stage/assets/video/
-
-      - name: Upload subpages and videos only
+      - name: Upload subpages and videos with curl
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -58,29 +48,27 @@ jobs:
           set -euo pipefail
           set +x
           root="${DEPLOY_DIR%/}"
-          lftp <<LFTP
-          set cmd:fail-exit yes
-          set net:max-retries 2
-          set net:timeout 20
-          set ssl:verify-certificate yes
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          open -u "$DEPLOY_USER","$DEPLOY_PASSWORD" "$DEPLOY_SCHEME://$DEPLOY_HOST:$DEPLOY_PORT"
-          mirror --reverse --verbose=1 --parallel=2 --no-perms /tmp/rss7-stage/ "$root/"
-          bye
-          LFTP
+          base="${DEPLOY_SCHEME}://${DEPLOY_HOST}:${DEPLOY_PORT}${root}"
+          upload() { curl --fail --silent --show-error --ssl-reqd --ftp-create-dirs --user "$DEPLOY_USER:$DEPLOY_PASSWORD" -T "$1" "$base/$2"; }
+          upload about.html about.html
+          upload services.html services.html
+          upload works.html works.html
+          upload sitemap.xml sitemap.xml
+          upload assets/video/about.mp4 assets/video/about.mp4
+          upload assets/video/services.mp4 assets/video/services.mp4
+          upload assets/video/works.mp4 assets/video/works.mp4
 
       - name: Verify live pages and video assets
         shell: bash
         run: |
           set -euo pipefail
           base="${SITE_URL%/}"
-          curl --fail --silent --show-error "$base/about.html" | grep -Fq 'assets/video/about.mp4'
-          curl --fail --silent --show-error "$base/services.html" | grep -Fq 'assets/video/services.mp4'
-          curl --fail --silent --show-error "$base/works.html" | grep -Fq 'assets/video/works.mp4'
+          curl --fail --silent --show-error "$base/about.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/about.mp4'
+          curl --fail --silent --show-error "$base/services.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/services.mp4'
+          curl --fail --silent --show-error "$base/works.html?deploy=${GITHUB_SHA}" | grep -Fq 'assets/video/works.mp4'
           for media in about services works; do
-            curl --fail --silent --show-error --range 0-31 "$base/assets/video/$media.mp4" >/dev/null
+            curl --fail --silent --show-error --range 0-31 "$base/assets/video/$media.mp4?deploy=${GITHUB_SHA}" >/dev/null
           done
           echo "Subpage videos are live."
 
-# retrigger: 2026-09-15
+# retrigger: curl-upload-2026-09-15
