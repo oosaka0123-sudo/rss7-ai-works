@@ -1,4 +1,4 @@
-name: Temporary eging FTP probe
+name: Temporary eging first deploy
 
 on:
   workflow_dispatch:
@@ -7,14 +7,45 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  deploy:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Install lftp
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Check out eging main
+        uses: actions/checkout@v4
+        with:
+          repository: oosaka0123-sudo/eging
+          ref: main
+          path: eging-src
+          persist-credentials: false
 
-      - name: Verify /eging is the subdomain document root
+      - name: Install build and deploy tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq php-cli ffmpeg lftp librsvg2-bin
+
+      - name: Validate PHP
+        run: find eging-src -name '*.php' -not -path '*/.git/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Build launch assets
+        run: |
+          set -euo pipefail
+          mkdir -p eging-src/public/assets/video eging-src/public/assets/brand
+          rsvg-convert -w 1200 -h 630 eging-src/public/assets/brand/og-default.svg -o eging-src/public/assets/brand/og-default.png
+          ffmpeg -hide_banner -loglevel error -y \
+            -f lavfi -i "color=c=0x061014:s=1280x720:r=24:d=2.2" \
+            -vf "noise=alls=7:allf=t+u,drawgrid=w=128:h=72:t=1:c=0x65f5db@0.08,vignette=PI/5,fade=t=in:st=0:d=0.35,fade=t=out:st=1.85:d=0.35" \
+            -an -c:v libx264 -preset veryslow -crf 28 -pix_fmt yuv420p -movflags +faststart \
+            eging-src/public/assets/video/opening.mp4
+          cat > /tmp/eging-private.htaccess <<'HTACCESS'
+          <IfModule mod_authz_core.c>
+          Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+          Order allow,deny
+          Deny from all
+          </IfModule>
+          HTACCESS
+
+      - name: Non-destructive upload
         shell: bash
         env:
           FTP_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
@@ -27,9 +58,6 @@ jobs:
           set +x
           scheme="${FTP_SCHEME:-ftp}"
           port="${FTP_PORT:-21}"
-          marker="EGING_DOCROOT_PROBE_${GITHUB_RUN_ID}"
-          printf '%s\n' "$marker" > /tmp/__eging_docroot_probe.txt
-
           lftp -c "
             set cmd:fail-exit yes;
             set net:max-retries 2;
@@ -38,42 +66,30 @@ jobs:
             set ftp:ssl-force true;
             set ftp:ssl-protect-data true;
             open -u \"$FTP_USER\",\"$FTP_PASSWORD\" \"$scheme://$FTP_HOST:$port\";
-            put /tmp/__eging_docroot_probe.txt -o /eging/__eging_docroot_probe.txt;
+            mkdir -p /eging;
+            mirror -R --verbose --only-newer --parallel=2 eging-src/public/ /eging/;
+            mkdir -p /eging-private /eging-private/app /eging-private/config /eging-private/database;
+            put /tmp/eging-private.htaccess -o /eging-private/.htaccess;
+            mirror -R --verbose --only-newer eging-src/app/ /eging-private/app/;
+            mirror -R --verbose --only-newer eging-src/database/ /eging-private/database/;
+            bye;
           "
 
-          for attempt in 1 2 3 4 5; do
-            body="$(curl --fail --silent --show-error --max-time 20 "https://eging.rss7.net/__eging_docroot_probe.txt?run=$GITHUB_RUN_ID" || true)"
-            if [[ "$body" == "$marker" ]]; then
-              echo "DOCROOT_CONFIRMED /eging"
-              exit 0
-            fi
-            sleep 3
-          done
-
-          echo "DOCROOT_NOT_CONFIRMED /eging"
-          exit 1
-
-      - name: Remove temporary probe
-        if: always()
+      - name: Verify public launch
         shell: bash
-        env:
-          FTP_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
-          FTP_USER: ${{ secrets.LOLIPOP_FTP_USER }}
-          FTP_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
-          FTP_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
-          FTP_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
         run: |
-          set +e
-          scheme="${FTP_SCHEME:-ftp}"
-          port="${FTP_PORT:-21}"
-          lftp -c "
-            set net:max-retries 1;
-            set net:timeout 15;
-            set ssl:verify-certificate yes;
-            set ftp:ssl-force true;
-            set ftp:ssl-protect-data true;
-            open -u \"$FTP_USER\",\"$FTP_PASSWORD\" \"$scheme://$FTP_HOST:$port\";
-            rm -f /eging/__eging_docroot_probe.txt;
-          "
-          rm -f /tmp/__eging_docroot_probe.txt
-          echo "Temporary probe cleanup attempted."
+          set -euo pipefail
+          BASE="https://eging.rss7.net"
+          curl -4 --fail --silent --show-error --location --retry 3 "$BASE/health.php" | grep -q '"ok":true'
+          curl -4 --fail --silent --show-error --location --retry 3 "$BASE/" | grep -q "EGING GEAR LAB"
+          curl -4 --fail --silent --show-error --location --retry 3 "$BASE/robots.txt" | grep -q "sitemap.xml"
+          curl -4 --fail --silent --show-error --location --retry 3 "$BASE/sitemap.xml" | grep -q "<urlset"
+          contact_status="$(curl -4 --silent --output /dev/null --write-out '%{http_code}' "$BASE/contact.php")"
+          article_status="$(curl -4 --silent --output /dev/null --write-out '%{http_code}' "$BASE/article.php?slug=probe")"
+          api_status="$(curl -4 --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "$BASE/api/simulate.php")"
+          [[ "$contact_status" == "200" ]]
+          [[ "$article_status" == "503" ]]
+          [[ "$api_status" == "503" ]]
+          private_status="$(curl -4 --silent --output /dev/null --write-out '%{http_code}' "https://rss7.net/eging-private/app/bootstrap.php")"
+          [[ "$private_status" != "200" ]]
+          echo "EGING_STATIC_LAUNCH_VERIFIED"
