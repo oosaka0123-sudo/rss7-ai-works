@@ -1,0 +1,55 @@
+name: Temporary eging FTP probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Read-only FTP probe
+        shell: bash
+        env:
+          FTP_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          FTP_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+          FTP_SCHEME: ${{ vars.LOLIPOP_FTP_SCHEME }}
+          FTP_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+        run: |
+          set -euo pipefail
+          set +x
+          : "${FTP_HOST:?missing host}"
+          : "${FTP_USER:?missing user}"
+          : "${FTP_PASSWORD:?missing password}"
+          scheme="${FTP_SCHEME:-ftp}"
+          port="${FTP_PORT:-21}"
+
+          check_path() {
+            local path="$1"
+            if lftp -c "
+              set cmd:fail-exit yes;
+              set net:max-retries 1;
+              set net:timeout 15;
+              set ssl:verify-certificate yes;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              open -u \"$FTP_USER\",\"$FTP_PASSWORD\" \"$scheme://$FTP_HOST:$port\";
+              cls -1 \"$path\";
+            " >/tmp/eging-list 2>/tmp/eging-err; then
+              echo "EXISTS $path"
+              sed -n '1,40p' /tmp/eging-list
+            else
+              echo "MISSING_OR_DENIED $path"
+            fi
+          }
+
+          check_path "/eging"
+          check_path "/eging/public"
+          echo "Probe complete. No remote files were modified."
