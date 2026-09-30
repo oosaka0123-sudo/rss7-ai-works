@@ -58,6 +58,37 @@ jobs:
           set +x
           scheme="${FTP_SCHEME:-ftp}"
           port="${FTP_PORT:-21}"
+          ensure_remote_dir() {
+            local remote_path="$1"
+            if lftp -c "
+              set cmd:fail-exit yes;
+              set net:max-retries 1;
+              set net:timeout 15;
+              set ssl:verify-certificate yes;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              open -u \"$FTP_USER\",\"$FTP_PASSWORD\" \"$scheme://$FTP_HOST:$port\";
+              cls -1 \"$remote_path\";
+            " >/dev/null 2>&1; then
+              return 0
+            fi
+            lftp -c "
+              set cmd:fail-exit yes;
+              set net:max-retries 1;
+              set net:timeout 15;
+              set ssl:verify-certificate yes;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              open -u \"$FTP_USER\",\"$FTP_PASSWORD\" \"$scheme://$FTP_HOST:$port\";
+              mkdir \"$remote_path\";
+            "
+          }
+
+          ensure_remote_dir /eging-private
+          ensure_remote_dir /eging-private/app
+          ensure_remote_dir /eging-private/config
+          ensure_remote_dir /eging-private/database
+
           lftp -c "
             set cmd:fail-exit yes;
             set net:max-retries 2;
@@ -66,9 +97,7 @@ jobs:
             set ftp:ssl-force true;
             set ftp:ssl-protect-data true;
             open -u \"$FTP_USER\",\"$FTP_PASSWORD\" \"$scheme://$FTP_HOST:$port\";
-            mkdir -p /eging;
             mirror -R --verbose --only-newer --parallel=2 eging-src/public/ /eging/;
-            mkdir -p /eging-private /eging-private/app /eging-private/config /eging-private/database;
             put /tmp/eging-private.htaccess -o /eging-private/.htaccess;
             mirror -R --verbose --only-newer eging-src/app/ /eging-private/app/;
             mirror -R --verbose --only-newer eging-src/database/ /eging-private/database/;
