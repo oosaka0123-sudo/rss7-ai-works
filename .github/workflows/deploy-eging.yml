@@ -101,7 +101,6 @@ jobs:
             "
           }
 
-          ensure_dir /eging
           ensure_dir /eging-private
           ensure_dir /eging-private/app
           ensure_dir /eging-private/database
