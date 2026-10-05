@@ -1,0 +1,134 @@
+name: Deploy Eging
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eging-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out eging main
+        uses: actions/checkout@v4
+        with:
+          repository: oosaka0123-sudo/eging
+          ref: main
+          path: eging
+          persist-credentials: false
+
+      - name: Validate eging source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f eging/public/index.php
+          test -f eging/public/health.php
+          test -f eging/public/_runtime.php
+          test -f eging/app/bootstrap.php
+          test -f eging/database/schema.sql
+          find eging -name '*.php' -not -path '*/.git/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Install deployment tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp ffmpeg librsvg2-bin
+
+      - name: Build launch assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd eging
+          mkdir -p public/assets/video public/assets/brand
+          rsvg-convert -w 1200 -h 630 public/assets/brand/og-default.svg -o public/assets/brand/og-default.png
+          ffmpeg -hide_banner -loglevel error -y \
+            -f lavfi -i "color=c=0x061014:s=1280x720:r=24:d=2.2" \
+            -vf "noise=alls=7:allf=t+u,drawgrid=w=128:h=72:t=1:c=0x65f5db@0.08,vignette=PI/5,fade=t=in:st=0:d=0.35,fade=t=out:st=1.85:d=0.35" \
+            -an -c:v libx264 -preset veryslow -crf 28 -pix_fmt yuv420p -movflags +faststart \
+            public/assets/video/opening.mp4
+          cat > /tmp/eging-private.htaccess <<'HTACCESS'
+          <IfModule mod_authz_core.c>
+          Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+          Order allow,deny
+          Deny from all
+          </IfModule>
+          HTACCESS
+
+      - name: Deploy eging without destructive sync
+        shell: bash
+        env:
+          FTP_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          FTP_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+          FTP_PORT: ${{ vars.LOLIPOP_FTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$FTP_HOST"
+          test -n "$FTP_USER"
+          test -n "$FTP_PASSWORD"
+          PORT="${FTP_PORT:-21}"
+
+          ensure_dir() {
+            local remote="$1"
+            if lftp -u "$FTP_USER","$FTP_PASSWORD" -p "$PORT" "$FTP_HOST" -e "
+              set cmd:fail-exit yes;
+              set net:max-retries 1;
+              set net:timeout 15;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              set ssl:verify-certificate yes;
+              cls -1 \"$remote\";
+              bye;
+            " >/dev/null 2>&1; then
+              return 0
+            fi
+            lftp -u "$FTP_USER","$FTP_PASSWORD" -p "$PORT" "$FTP_HOST" -e "
+              set cmd:fail-exit yes;
+              set net:max-retries 1;
+              set net:timeout 15;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              set ssl:verify-certificate yes;
+              mkdir \"$remote\";
+              bye;
+            "
+          }
+
+          ensure_dir /eging
+          ensure_dir /eging-private
+          ensure_dir /eging-private/app
+          ensure_dir /eging-private/database
+          ensure_dir /eging-private/var
+          ensure_dir /eging-private/var/sessions
+          ensure_dir /eging-private/var/login-rate
+
+          lftp -u "$FTP_USER","$FTP_PASSWORD" -p "$PORT" "$FTP_HOST" <<EOF
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate yes
+          mirror -R --verbose --only-newer --parallel=2 eging/public/ /eging/
+          put /tmp/eging-private.htaccess -o /eging-private/.htaccess
+          mirror -R --verbose --only-newer eging/app/ /eging-private/app/
+          mirror -R --verbose --only-newer eging/database/ /eging-private/database/
+          bye
+          EOF
+
+      - name: Verify eging production
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://eging.rss7.net"
+          curl --fail --silent --show-error --location --retry 3 "$BASE/health.php" | grep -q '"ok":true'
+          curl --fail --silent --show-error --location --retry 3 "$BASE/" | grep -q "EGING GEAR LAB"
+          curl --fail --silent --show-error --location --retry 3 "$BASE/robots.txt" | grep -q "sitemap.xml"
+          curl --fail --silent --show-error --location --retry 3 "$BASE/sitemap.xml" | grep -q "<urlset"
