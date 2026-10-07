@@ -44,6 +44,36 @@ jobs:
           </IfModule>
           HTACCESS
 
+          ensure_remote_dir() {
+            local remote_path="$1"
+            if lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "$FTP_HOST" -e "
+              set cmd:fail-exit yes;
+              set net:max-retries 1;
+              set net:timeout 15;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              set ssl:verify-certificate yes;
+              cls -1 \"$remote_path\";
+              bye;
+            " >/dev/null 2>&1; then
+              return 0
+            fi
+            lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "$FTP_HOST" -e "
+              set cmd:fail-exit yes;
+              set net:max-retries 1;
+              set net:timeout 15;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              set ssl:verify-certificate yes;
+              mkdir \"$remote_path\";
+              bye;
+            "
+          }
+
+          ensure_remote_dir "/eging-private"
+          ensure_remote_dir "/eging-private/app"
+          ensure_remote_dir "/eging-private/database"
+
           lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "$FTP_HOST" <<'EOF'
           set cmd:fail-exit yes
           set net:max-retries 2
@@ -51,9 +81,6 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate yes
-          mkdir -p "/eging-private"
-          mkdir -p "/eging-private/app"
-          mkdir -p "/eging-private/database"
           mirror -R --verbose --only-newer --parallel=2 source/public/ "/eging/"
           put /tmp/private.htaccess -o "/eging-private/.htaccess"
           mirror -R --verbose --only-newer source/app/ "/eging-private/app/"
