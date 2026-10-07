@@ -53,7 +53,7 @@ jobs:
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate yes;
-              cls -1 \"$remote_path\";
+              cls -1 $remote_path;
               bye;
             " >/dev/null 2>&1; then
               return 0
@@ -69,8 +69,8 @@ jobs:
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate yes;
-              cd \"$parent_path\";
-              mkdir \"$dir_name\";
+              cd $parent_path;
+              mkdir $dir_name;
               bye;
             "
           }
