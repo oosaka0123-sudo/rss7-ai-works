@@ -75,8 +75,12 @@ jobs:
           test -n "$FTP_PASSWORD"
           PORT="${FTP_PORT:-21}"
 
-          ensure_dir() {
-            local remote="$1"
+          ensure_child() {
+            local parent="$1"
+            local child="$2"
+            local target="${parent%/}/$child"
+            [[ "$parent" == "/" ]] && target="/$child"
+
             if lftp -u "$FTP_USER","$FTP_PASSWORD" -p "$PORT" "$FTP_HOST" -e "
               set cmd:fail-exit yes;
               set net:max-retries 1;
@@ -84,11 +88,12 @@ jobs:
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate yes;
-              cls -1 \"$remote\";
+              cd \"$target\";
               bye;
             " >/dev/null 2>&1; then
               return 0
             fi
+
             lftp -u "$FTP_USER","$FTP_PASSWORD" -p "$PORT" "$FTP_HOST" -e "
               set cmd:fail-exit yes;
               set net:max-retries 1;
@@ -96,18 +101,20 @@ jobs:
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate yes;
-              mkdir \"$remote\";
+              cd \"$parent\";
+              mkdir \"$child\";
+              cd \"$child\";
               bye;
             "
           }
 
-          ensure_dir /eging
-          ensure_dir /eging-private
-          ensure_dir /eging-private/app
-          ensure_dir /eging-private/database
-          ensure_dir /eging-private/var
-          ensure_dir /eging-private/var/sessions
-          ensure_dir /eging-private/var/login-rate
+          ensure_child / eging
+          ensure_child / eging-private
+          ensure_child /eging-private app
+          ensure_child /eging-private database
+          ensure_child /eging-private var
+          ensure_child /eging-private/var sessions
+          ensure_child /eging-private/var login-rate
 
           lftp -u "$FTP_USER","$FTP_PASSWORD" -p "$PORT" "$FTP_HOST" <<EOF
           set cmd:fail-exit yes
