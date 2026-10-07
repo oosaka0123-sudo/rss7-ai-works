@@ -1,0 +1,73 @@
+name: Temporary Eging Public Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout eging source
+        run: git clone --depth 1 https://github.com/oosaka0123-sudo/eging.git source
+
+      - name: Validate PHP
+        run: find source -name '*.php' -not -path '*/.git/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Build launch assets
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg lftp librsvg2-bin
+          mkdir -p source/public/assets/video source/public/assets/brand
+          rsvg-convert -w 1200 -h 630 source/public/assets/brand/og-default.svg -o source/public/assets/brand/og-default.png
+          ffmpeg -hide_banner -loglevel error -y \
+            -f lavfi -i "color=c=0x061014:s=1280x720:r=24:d=2.2" \
+            -vf "noise=alls=7:allf=t+u,drawgrid=w=128:h=72:t=1:c=0x65f5db@0.08,vignette=PI/5,fade=t=in:st=0:d=0.35,fade=t=out:st=1.85:d=0.35" \
+            -an -c:v libx264 -preset veryslow -crf 28 -pix_fmt yuv420p -movflags +faststart \
+            source/public/assets/video/opening.mp4
+
+      - name: Deploy eging public site without destructive sync
+        shell: bash
+        env:
+          FTP_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          FTP_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cat > /tmp/private.htaccess <<'HTACCESS'
+          <IfModule mod_authz_core.c>
+          Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+          Order allow,deny
+          Deny from all
+          </IfModule>
+          HTACCESS
+
+          lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "$FTP_HOST" <<'EOF'
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate yes
+          mkdir -p "/eging-private"
+          mkdir -p "/eging-private/app"
+          mkdir -p "/eging-private/database"
+          mirror -R --verbose --only-newer --parallel=2 source/public/ "/eging/"
+          put /tmp/private.htaccess -o "/eging-private/.htaccess"
+          mirror -R --verbose --only-newer source/app/ "/eging-private/app/"
+          mirror -R --verbose --only-newer source/database/ "/eging-private/database/"
+          bye
+          EOF
+
+      - name: Verify live public site
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://eging.rss7.net"
+          curl --fail --silent --show-error --location --retry 3 "$BASE/health.php" | grep -q '"ok":true'
+          curl --fail --silent --show-error --location --retry 3 "$BASE/" | grep -q "EGING GEAR LAB"
+          curl --fail --silent --show-error --location --retry 3 "$BASE/robots.txt" | grep -q "sitemap.xml"
+          curl --fail --silent --show-error --location --retry 3 "$BASE/sitemap.xml" | grep -q "<urlset"
+          echo "Eging public launch verified."
