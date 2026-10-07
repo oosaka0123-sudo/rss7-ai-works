@@ -70,9 +70,12 @@ jobs:
             "
           }
 
-          ensure_remote_dir "/eging-private"
-          ensure_remote_dir "/eging-private/app"
-          ensure_remote_dir "/eging-private/database"
+          ensure_remote_dir "/eging/_private"
+          ensure_remote_dir "/eging/_private/app"
+          ensure_remote_dir "/eging/_private/database"
+          ensure_remote_dir "/eging/_private/var"
+          ensure_remote_dir "/eging/_private/var/sessions"
+          ensure_remote_dir "/eging/_private/var/login-rate"
 
           lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "$FTP_HOST" <<'EOF'
           set cmd:fail-exit yes
@@ -82,7 +85,7 @@ jobs:
           set ftp:ssl-protect-data true
           set ssl:verify-certificate yes
           mirror -R --verbose --only-newer --parallel=2 source/public/ "/eging/"
-          put /tmp/private.htaccess -o "/eging-private/.htaccess"
+          put /tmp/private.htaccess -o "/eging/_private/.htaccess"
           mirror -R --verbose --only-newer source/app/ "/eging-private/app/"
           mirror -R --verbose --only-newer source/database/ "/eging-private/database/"
           bye
