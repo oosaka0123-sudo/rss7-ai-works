@@ -58,6 +58,10 @@ jobs:
             " >/dev/null 2>&1; then
               return 0
             fi
+            local parent_path
+            local dir_name
+            parent_path="$(dirname "$remote_path")"
+            dir_name="$(basename "$remote_path")"
             lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "$FTP_HOST" -e "
               set cmd:fail-exit yes;
               set net:max-retries 1;
@@ -65,7 +69,8 @@ jobs:
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate yes;
-              mkdir \"$remote_path\";
+              cd \"$parent_path\";
+              mkdir \"$dir_name\";
               bye;
             "
           }
@@ -86,8 +91,8 @@ jobs:
           set ssl:verify-certificate yes
           mirror -R --verbose --only-newer --parallel=2 source/public/ "/eging/"
           put /tmp/private.htaccess -o "/eging/_private/.htaccess"
-          mirror -R --verbose --only-newer source/app/ "/eging-private/app/"
-          mirror -R --verbose --only-newer source/database/ "/eging-private/database/"
+          mirror -R --verbose --only-newer source/app/ "/eging/_private/app/"
+          mirror -R --verbose --only-newer source/database/ "/eging/_private/database/"
           bye
           EOF
 
