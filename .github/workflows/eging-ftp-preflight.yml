@@ -1,0 +1,32 @@
+name: Eging FTP Preflight
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Verify eging directory without writes
+        shell: bash
+        env:
+          FTP_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
+          FTP_USER: ${{ secrets.LOLIPOP_FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "$FTP_HOST" <<'EOF'
+          set cmd:fail-exit yes
+          set net:max-retries 1
+          set net:timeout 15
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate yes
+          cls -1 "/eging"
+          bye
+          EOF
+          echo "FTPS login OK and /eging exists."
