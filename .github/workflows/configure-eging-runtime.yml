@@ -29,9 +29,9 @@ jobs:
           FTP_HOST: ${{ secrets.LOLIPOP_FTP_HOST }}
           FTP_USER: ${{ secrets.LOLIPOP_FTP_USER }}
           FTP_PASSWORD: ${{ secrets.LOLIPOP_FTP_PASSWORD }}
-          DB_HOST: ${{ secrets.EGING_DB_HOST }}
-          DB_NAME: ${{ secrets.EGING_DB_NAME }}
-          DB_USER: ${{ secrets.EGING_DB_USER }}
+          DB_HOST: ${{ vars.EGING_DB_HOST }}
+          DB_NAME: ${{ vars.EGING_DB_NAME }}
+          DB_USER: ${{ vars.EGING_DB_USER }}
           DB_PASSWORD: ${{ secrets.EGING_DB_PASSWORD }}
           ADMIN_PASSWORD_HASH: ${{ secrets.EGING_ADMIN_PASSWORD_HASH }}
         run: |
@@ -63,9 +63,9 @@ jobs:
       - name: Build private runtime config
         shell: bash
         env:
-          DB_HOST: ${{ secrets.EGING_DB_HOST }}
-          DB_NAME: ${{ secrets.EGING_DB_NAME }}
-          DB_USER: ${{ secrets.EGING_DB_USER }}
+          DB_HOST: ${{ vars.EGING_DB_HOST }}
+          DB_NAME: ${{ vars.EGING_DB_NAME }}
+          DB_USER: ${{ vars.EGING_DB_USER }}
           DB_PASSWORD: ${{ secrets.EGING_DB_PASSWORD }}
           ADMIN_PASSWORD_HASH: ${{ secrets.EGING_ADMIN_PASSWORD_HASH }}
         run: |
