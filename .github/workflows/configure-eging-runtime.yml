@@ -53,23 +53,12 @@ jobs:
       - name: Install clients
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq lftp default-mysql-client php-cli
+          sudo apt-get install -y -qq lftp php-cli
 
-      - name: Verify database and apply idempotent schema
-        shell: bash
-        env:
-          DB_HOST: ${{ secrets.EGING_DB_HOST }}
-          DB_NAME: ${{ secrets.EGING_DB_NAME }}
-          DB_USER: ${{ secrets.EGING_DB_USER }}
-          DB_PASSWORD: ${{ secrets.EGING_DB_PASSWORD }}
+      - name: Note Lolipop database boundary
         run: |
-          set -euo pipefail
-          set +x
-          export MYSQL_PWD="$DB_PASSWORD"
-          mysql --connect-timeout=10 --host="$DB_HOST" --user="$DB_USER" --database="$DB_NAME"             --execute="SELECT VERSION() AS server_version, DATABASE() AS database_name;"
-          mysql --host="$DB_HOST" --user="$DB_USER" --database="$DB_NAME" < eging/database/schema.sql
-          mysql --host="$DB_HOST" --user="$DB_USER" --database="$DB_NAME"             --execute="SHOW TABLES;" | grep -Eq 'articles|gear_items|simulator_rules|contact_messages'
-          unset MYSQL_PWD
+          echo "Lolipop MySQL host is private to the hosting network."
+          echo "This workflow only uploads runtime config. Schema installation runs on Lolipop via /admin/install.php."
 
       - name: Build private runtime config
         shell: bash
@@ -154,10 +143,8 @@ jobs:
           [[ "$admin_status" == "200" ]] || { echo "Admin login returned $admin_status"; exit 1; }
           grep -Fq "エギングギアラボ CMS" /tmp/admin.html
 
-          sim_status="$(curl --silent --output /tmp/sim.json --write-out '%{http_code}'             -X POST             -H 'Content-Type: application/x-www-form-urlencoded'             --data 'season=spring&field_type=port&depth_band=mid&wind_band=low&tide_phase=rising&target_size=medium&time_of_day=day'             "$BASE/api/simulate.php")"
-          [[ "$sim_status" == "200" || "$sim_status" == "404" ]] || { echo "Simulator API returned $sim_status"; exit 1; }
+          health_status="$(curl --silent --output /tmp/health.json --write-out '%{http_code}' "$BASE/health.php")"
+          [[ "$health_status" == "200" ]] || { echo "Health endpoint returned $health_status"; exit 1; }
+          grep -Fq '"ok":true' /tmp/health.json
 
-          contact_status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$BASE/contact.php")"
-          [[ "$contact_status" == "200" ]] || { echo "Contact page returned $contact_status"; exit 1; }
-
-          echo "Eging dynamic runtime is configured."
+          echo "Eging runtime config is uploaded. Run /admin/install.php after admin login to initialize schema."
