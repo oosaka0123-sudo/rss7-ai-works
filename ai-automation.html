@@ -22,7 +22,7 @@
 a{color:inherit}header{position:fixed;inset:0 0 auto;z-index:1000;min-height:70px;padding:16px 30px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,4,8,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
 .logo{font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:900;letter-spacing:.1em;text-decoration:none;display:flex;align-items:center;gap:12px}.logo-mark{width:36px;height:36px;border:2px solid var(--blue);display:grid;place-items:center}.logo-mark span{font-size:.65rem;color:var(--blue)}.logo em{color:var(--blue);font-style:normal}
 .menu-btn{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:7px;background:none;border:0}.menu-btn span{width:25px;height:2px;background:var(--blue)}
-.mobile-menu{display:none;position:fixed;top:69px;left:0;right:0;z-index:999;padding:20px 30px;background:rgba(2,4,8,.98);border-bottom:1px solid var(--border);flex-direction:column;gap:10px}.mobile-menu.open{display:flex}.nav-link{padding:11px 14px;border:1px solid var(--border);font:700 .68rem 'Share Tech Mono',monospace;letter-spacing:.12em;text-align:center;text-decoration:none;color:var(--gray)}.nav-link:hover,.nav-link.active{color:var(--blue);border-color:var(--blue)}
+.mobile-menu{display:none;position:fixed;top:70px;left:0;right:0;z-index:999;padding:20px 30px;background:rgba(2,4,8,.98);border-bottom:1px solid var(--border);flex-direction:column;gap:10px}.mobile-menu.open{display:flex}.nav-link{padding:11px 14px;border:1px solid var(--border);font:700 .68rem 'Share Tech Mono',monospace;letter-spacing:.12em;text-align:center;text-decoration:none;color:var(--gray)}.nav-link:hover,.nav-link.active{color:var(--blue);border-color:var(--blue)}.menu-btn:focus-visible,.nav-link:focus-visible,.btn:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 .hero{position:relative;padding:150px 30px 95px;min-height:680px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 70% 25%,rgba(0,170,255,.12),transparent 30%),linear-gradient(180deg,#020408 0%,#04101a 70%,#020408 100%)}
 .hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(0,170,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,170,255,.05) 1px,transparent 1px);background-size:54px 54px;mask-image:linear-gradient(to bottom,#000,transparent 85%)}
 .hero-inner{position:relative;z-index:1;width:min(1080px,100%)}.eyebrow{font:700 .68rem 'Share Tech Mono',monospace;letter-spacing:.28em;color:var(--cyan);margin-bottom:18px}.hero h1{font:900 clamp(2.5rem,8vw,6.1rem) 'Orbitron',monospace;line-height:1.02;letter-spacing:.02em;max-width:950px}.hero h1 span{display:block;color:var(--blue)}.lead{max-width:720px;margin-top:28px;font-size:clamp(.98rem,2vw,1.12rem);color:#9ab3cb}.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}.btn{min-height:48px;padding:12px 20px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700;font-size:.83rem;border:1px solid var(--blue)}.btn-primary{background:var(--blue);color:#00111c}.btn-secondary{color:var(--white);background:rgba(0,170,255,.04)}
@@ -45,7 +45,7 @@ footer{border-top:1px solid var(--border);padding:34px 20px;text-align:center;co
 <a href="/" class="logo"><span class="logo-mark"><span>R7</span></span>RSS7 <em>AI</em> Works</a>
 <button class="menu-btn" type="button" aria-label="メニュー" aria-controls="mobileMenu" aria-expanded="false" onclick="toggleMenu(this)"><span></span><span></span><span></span></button>
 </header>
-<nav class="mobile-menu" id="mobileMenu">
+<nav class="mobile-menu" id="mobileMenu" aria-label="主要ナビゲーション">
 <a href="/" class="nav-link">TOP</a><a href="services.html" class="nav-link">SERVICES</a><a href="ai-automation.html" class="nav-link active" aria-current="page">AI AUTOMATION</a><a href="works.html" class="nav-link">WORKS</a><a href="about.html" class="nav-link">ABOUT</a><a href="contact.html" class="nav-link">CONTACT</a>
 </nav>
 
@@ -108,7 +108,7 @@ footer{border-top:1px solid var(--border);padding:34px 20px;text-align:center;co
 
 <footer><p><a href="services.html">サービス一覧</a> &nbsp; / &nbsp; <a href="privacy.html">プライバシーポリシー</a><br>© 2026 RSS7 AI Works All Rights Reserved.</p></footer>
 <script>
-function toggleMenu(button){const menu=document.getElementById('mobileMenu');const open=menu.classList.toggle('open');button.setAttribute('aria-expanded',open?'true':'false')}
+function toggleMenu(button){const menu=document.getElementById('mobileMenu');const open=menu.classList.toggle('open');button.setAttribute('aria-expanded',open?'true':'false')}const menu=document.getElementById('mobileMenu');const menuButton=document.querySelector('.menu-btn');menu.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{menu.classList.remove('open');menuButton.setAttribute('aria-expanded','false')}));document.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.classList.contains('open')){menu.classList.remove('open');menuButton.setAttribute('aria-expanded','false');menuButton.focus()}});
 </script>
 </body>
 </html>
