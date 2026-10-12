@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ERRORS: list[str] = []
 WARNINGS: list[str] = []
 RUNTIME_ENDPOINTS: set[str] = set()
-MAIN_PAGES = ["index.html", "services.html", "about.html", "contact.html", "blog.html", "privacy.html"]
+MAIN_PAGES = ["index.html", "services.html", "ai-automation.html", "about.html", "contact.html", "blog.html", "privacy.html"]
 
 
 class ReferenceParser(HTMLParser):

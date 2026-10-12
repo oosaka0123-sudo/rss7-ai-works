@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI自動化代行 | 定型業務・反復作業をAIで効率化 | RSS7 AI Works</title>
+<meta name="description" content="RSS7 AI WorksのAI自動化代行。毎日・毎週くり返す定型業務を整理し、AI・API・クラウドサービスを組み合わせて実務に合う自動化フローを設計・構築します。大阪から全国対応。">
+<meta name="keywords" content="AI自動化代行,業務自動化,AI業務効率化,AI導入,大阪,RSS7 AI Works">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="AI自動化代行 | RSS7 AI Works">
+<meta property="og:description" content="くり返し作業を整理し、AIと自動化で実務フローを軽くする。設計・構築・テスト・運用改善まで支援します。">
+<meta property="og:url" content="https://rss7.net/ai-automation.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://rss7.net/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://rss7.net/ai-automation.html">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23020408' rx='15'/%3E%3Ctext y='.85em' font-size='52' x='8' fill='%2300aaff' font-family='monospace' font-weight='bold'%3ER7%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--bg2:#060d14;--card:#08131e;--blue:#00aaff;--cyan:#00ffee;--white:#e8f4ff;--gray:#7898b8;--border:rgba(0,170,255,.16);}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-serif;overflow-x:hidden;line-height:1.8}
+a{color:inherit}header{position:fixed;inset:0 0 auto;z-index:1000;min-height:70px;padding:16px 30px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,4,8,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+.logo{font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:900;letter-spacing:.1em;text-decoration:none;display:flex;align-items:center;gap:12px}.logo-mark{width:36px;height:36px;border:2px solid var(--blue);display:grid;place-items:center}.logo-mark span{font-size:.65rem;color:var(--blue)}.logo em{color:var(--blue);font-style:normal}
+.menu-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;min-width:44px;min-height:44px;padding:7px;background:none;border:0}.menu-btn span{width:25px;height:2px;background:var(--blue)}
+.mobile-menu{display:none;position:fixed;top:70px;left:0;right:0;z-index:999;padding:20px 30px;background:rgba(2,4,8,.98);border-bottom:1px solid var(--border);flex-direction:column;gap:10px}.mobile-menu.open{display:flex}.nav-link{padding:11px 14px;border:1px solid var(--border);font:700 .68rem 'Share Tech Mono',monospace;letter-spacing:.12em;text-align:center;text-decoration:none;color:var(--gray)}.nav-link:hover,.nav-link.active{color:var(--blue);border-color:var(--blue)}.menu-btn:focus-visible,.nav-link:focus-visible,.btn:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.hero{position:relative;padding:150px 30px 95px;min-height:680px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 70% 25%,rgba(0,170,255,.12),transparent 30%),linear-gradient(180deg,#020408 0%,#04101a 70%,#020408 100%)}
+.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(0,170,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,170,255,.05) 1px,transparent 1px);background-size:54px 54px;mask-image:linear-gradient(to bottom,#000,transparent 85%)}
+.hero-inner{position:relative;z-index:1;width:min(1080px,100%)}.eyebrow{font:700 .68rem 'Share Tech Mono',monospace;letter-spacing:.28em;color:var(--cyan);margin-bottom:18px}.hero h1{font:900 clamp(2.5rem,8vw,6.1rem) 'Orbitron',monospace;line-height:1.02;letter-spacing:.02em;max-width:950px}.hero h1 span{display:block;color:var(--blue)}.lead{max-width:720px;margin-top:28px;font-size:clamp(.98rem,2vw,1.12rem);color:#9ab3cb}.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}.btn{min-height:48px;padding:12px 20px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700;font-size:.83rem;border:1px solid var(--blue)}.btn-primary{background:var(--blue);color:#00111c}.btn-secondary{color:var(--white);background:rgba(0,170,255,.04)}
+.micro{margin-top:20px;color:var(--gray);font-size:.78rem}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}.section{padding:88px 0}.section.alt{background:var(--bg2)}.kicker{font:700 .64rem 'Share Tech Mono',monospace;letter-spacing:.3em;color:var(--blue);margin-bottom:12px}.section h2{font:700 clamp(1.8rem,4vw,3.2rem) 'Orbitron',monospace;line-height:1.25;margin-bottom:18px}.intro{max-width:720px;color:var(--gray);font-size:.94rem}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px}.card{padding:26px;border:1px solid var(--border);background:linear-gradient(145deg,rgba(10,26,40,.88),rgba(3,9,15,.88));min-height:210px}.card-num{display:block;font:700 .64rem 'Share Tech Mono',monospace;color:var(--cyan);letter-spacing:.15em;margin-bottom:24px}.card h3{font-size:1.02rem;margin-bottom:10px}.card p{font-size:.86rem;color:var(--gray)}
+.fit-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:30px;margin-top:38px}.panel{border:1px solid var(--border);padding:28px;background:rgba(5,15,24,.75)}.checklist{list-style:none;margin-top:14px}.checklist li{position:relative;padding:12px 0 12px 28px;border-bottom:1px solid rgba(0,170,255,.08);font-size:.9rem;color:#afc5da}.checklist li::before{content:"✓";position:absolute;left:0;color:var(--cyan);font-weight:700}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:38px}.step{padding:22px;border-top:2px solid var(--blue);background:var(--card)}.step b{display:block;font:700 .65rem 'Share Tech Mono',monospace;color:var(--cyan);margin-bottom:12px}.step h3{font-size:.98rem;margin-bottom:7px}.step p{font-size:.82rem;color:var(--gray)}
+.safety{border:1px solid rgba(0,255,238,.23);background:linear-gradient(90deg,rgba(0,255,238,.05),rgba(0,170,255,.04));padding:30px;margin-top:34px}.safety strong{color:var(--cyan)}.safety p{margin-top:8px;color:#a9c0d4;font-size:.9rem}
+.faq{display:grid;gap:12px;margin-top:34px}.faq details{border:1px solid var(--border);background:var(--card);padding:18px 20px}.faq summary{cursor:pointer;font-weight:700}.faq p{margin-top:12px;color:var(--gray);font-size:.88rem}
+.cta{padding:90px 20px;text-align:center;background:radial-gradient(circle at center,rgba(0,170,255,.12),transparent 55%)}.cta h2{font:800 clamp(2rem,5vw,3.7rem) 'Orbitron',monospace}.cta p{max-width:650px;margin:18px auto 28px;color:var(--gray)}
+footer{border-top:1px solid var(--border);padding:34px 20px;text-align:center;color:var(--gray);font-size:.75rem}footer a{color:var(--blue)}
+@media(max-width:800px){header{padding:14px 18px}.hero{padding:125px 20px 70px;min-height:auto}.grid,.flow,.fit-grid{grid-template-columns:1fr}.section{padding:68px 0}.wrap{width:min(100% - 30px,1080px)}.card{min-height:0}.hero h1{font-size:clamp(2.45rem,14vw,4.4rem)}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Service","name":"AI自動化代行","provider":{"@type":"Organization","name":"RSS7 AI Works","url":"https://rss7.net/"},"areaServed":"JP","url":"https://rss7.net/ai-automation.html","description":"定型業務や反復作業を整理し、AI・API・クラウドサービスを組み合わせて自動化フローを設計・構築するサービス。"}
+</script>
+</head>
+<body>
+<header>
+<a href="/" class="logo"><span class="logo-mark"><span>R7</span></span>RSS7 <em>AI</em> Works</a>
+<button class="menu-btn" type="button" aria-label="メニュー" aria-controls="mobileMenu" aria-expanded="false" onclick="toggleMenu(this)"><span></span><span></span><span></span></button>
+</header>
+<nav class="mobile-menu" id="mobileMenu" aria-label="主要ナビゲーション">
+<a href="/" class="nav-link">TOP</a><a href="services.html" class="nav-link">SERVICES</a><a href="ai-automation.html" class="nav-link active" aria-current="page">AI AUTOMATION</a><a href="works.html" class="nav-link">WORKS</a><a href="about.html" class="nav-link">ABOUT</a><a href="contact.html" class="nav-link">CONTACT</a>
+</nav>
+
+<main>
+<section class="hero">
+<div class="hero-inner">
+<p class="eyebrow">AI AUTOMATION SERVICE</p>
+<h1>くり返す仕事を、<span>仕組みに変える。</span></h1>
+<p class="lead">毎日の転記、情報整理、定型チェック、更新作業など。「人が毎回やらなくてもよい仕事」を見つけ、AI・API・クラウドサービスを組み合わせて、実務に合う自動化フローを設計・構築します。</p>
+<div class="hero-actions"><a class="btn btn-primary" href="contact.html?service=AI%E8%87%AA%E5%8B%95%E5%8C%96%E4%BB%A3%E8%A1%8C">無料相談する</a><a class="btn btn-secondary" href="#examples">自動化できる業務を見る</a></div>
+<p class="micro">内容を確認して個別見積もり。まずは「今どの作業に時間がかかっているか」をお聞かせください。</p>
+</div>
+</section>
+
+<section class="section" id="examples"><div class="wrap">
+<p class="kicker">WHAT WE AUTOMATE</p><h2>自動化の対象例</h2>
+<p class="intro">ツールありきではなく、現在の業務手順から整理します。完全自動化だけでなく、「最後だけ人が確認する」半自動化も設計できます。</p>
+<div class="grid">
+<article class="card"><span class="card-num">01 / COLLECT</span><h3>情報収集・整理</h3><p>複数の情報源から必要な内容を集め、分類・要約・一覧化する反復作業を軽くします。</p></article>
+<article class="card"><span class="card-num">02 / TRANSFER</span><h3>転記・定型入力</h3><p>同じ内容を複数の場所へ入力する作業や、決まった形式への整形・転記を自動化します。</p></article>
+<article class="card"><span class="card-num">03 / UPDATE</span><h3>更新・通知</h3><p>条件に応じた更新、定期処理、確認結果の通知など、決まったルールで動く仕事を仕組み化します。</p></article>
+<article class="card"><span class="card-num">04 / AI ASSIST</span><h3>文章・分類のAI補助</h3><p>文章の下書き、要約、分類、チェックなど、AIが得意な処理を業務フローの一部として組み込みます。</p></article>
+<article class="card"><span class="card-num">05 / CONNECT</span><h3>サービス間の連携</h3><p>利用中のクラウドサービスやAPIをつなぎ、手作業で橋渡ししている工程を減らします。</p></article>
+<article class="card"><span class="card-num">06 / CHECK</span><h3>監視・確認の補助</h3><p>状態確認や定型チェックを自動化し、異常や判断が必要な時だけ人へ回す構成を目指します。</p></article>
+</div>
+</div></section>
+
+<section class="section alt"><div class="wrap">
+<p class="kicker">GOOD FIT / HUMAN GATE</p><h2>「全部AIに任せる」サービスではありません。</h2>
+<div class="fit-grid">
+<div class="panel"><h3>向いている業務</h3><ul class="checklist"><li>手順がある程度決まっている</li><li>毎日・毎週くり返している</li><li>転記・確認・整理に時間がかかる</li><li>複数のツールを人がつないでいる</li><li>例外時だけ人が判断すればよい</li></ul></div>
+<div class="panel"><h3>人の確認を残す業務</h3><ul class="checklist"><li>重要な承認や最終判断</li><li>顧客への重要連絡</li><li>金銭・契約・権限に関わる操作</li><li>例外が多くルール化しにくい処理</li><li>誤操作の影響が大きい工程</li></ul></div>
+</div>
+<div class="safety"><strong>安全側に設計します。</strong><p>自動化できる工程と、人が確認すべき工程を分けます。既存の仕事をいきなり全自動へ置き換えるのではなく、小さく試して動作を確認しながら範囲を広げます。</p></div>
+</div></section>
+
+<section class="section"><div class="wrap">
+<p class="kicker">PROCESS</p><h2>ご相談から運用まで</h2>
+<p class="intro">現在の作業を確認し、「何を減らすと効果が大きいか」から決めます。</p>
+<div class="flow">
+<div class="step"><b>STEP 01</b><h3>業務ヒアリング</h3><p>現在の作業、使用ツール、頻度、困っている点を整理します。</p></div>
+<div class="step"><b>STEP 02</b><h3>自動化設計</h3><p>自動化する工程と人が確認する工程を分け、実装範囲を決めます。</p></div>
+<div class="step"><b>STEP 03</b><h3>構築・テスト</h3><p>小さく構築し、想定ケースと例外時の動きを確認して調整します。</p></div>
+<div class="step"><b>STEP 04</b><h3>運用・改善</h3><p>実運用後の課題を見ながら、必要に応じて処理や手順を改善します。</p></div>
+</div>
+</div></section>
+
+<section class="section alt"><div class="wrap">
+<p class="kicker">FAQ</p><h2>よくあるご質問</h2>
+<div class="faq">
+<details><summary>何を自動化できるか分からなくても相談できますか？</summary><p>はい。作業内容を伺い、反復回数・作業時間・判断の有無などから、自動化に向く工程を整理します。</p></details>
+<details><summary>AI導入コンサルとの違いは何ですか？</summary><p>AI導入コンサルは活用方針や導入支援が中心です。AI自動化代行は、具体的な反復業務を対象に、自動化フローの設計・構築・テストまで行うサービスです。</p></details>
+<details><summary>すべて無人で動かす必要がありますか？</summary><p>いいえ。重要な判断や承認は人に残し、その前後だけ自動化する構成も可能です。安全性と実務の使いやすさを優先します。</p></details>
+<details><summary>費用は決まっていますか？</summary><p>連携するサービス数、処理の複雑さ、テスト範囲によって異なるため、内容を確認して個別に見積もります。</p></details>
+</div>
+</div></section>
+
+<section class="cta"><h2>まず、面倒な作業を<br>1つ教えてください。</h2><p>「毎日これを転記している」「毎週同じ確認をしている」など、具体的な作業から自動化の可能性を整理します。</p><a class="btn btn-primary" href="contact.html?service=AI%E8%87%AA%E5%8B%95%E5%8C%96%E4%BB%A3%E8%A1%8C">AI自動化代行を相談する</a></section>
+</main>
+
+<footer><p><a href="services.html">サービス一覧</a> &nbsp; / &nbsp; <a href="privacy.html">プライバシーポリシー</a><br>© 2026 RSS7 AI Works All Rights Reserved.</p></footer>
+<script>
+function toggleMenu(button){const menu=document.getElementById('mobileMenu');const open=menu.classList.toggle('open');button.setAttribute('aria-expanded',open?'true':'false')}const menu=document.getElementById('mobileMenu');const menuButton=document.querySelector('.menu-btn');menu.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{menu.classList.remove('open');menuButton.setAttribute('aria-expanded','false')}));document.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.classList.contains('open')){menu.classList.remove('open');menuButton.setAttribute('aria-expanded','false');menuButton.focus()}});
+</script>
+</body>
+</html>
