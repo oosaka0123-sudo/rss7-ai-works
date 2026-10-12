@@ -159,6 +159,16 @@ jobs:
               $result['db'] = isset($pdo) && $pdo instanceof PDO;
           } catch (Throwable $e) {
               $result['error_class'] = get_class($e);
+              $result['error_code'] = (string)$e->getCode();
+              $previous = $e->getPrevious();
+              if ($previous instanceof Throwable) {
+                  $result['previous_class'] = get_class($previous);
+                  $result['previous_code'] = (string)$previous->getCode();
+                  if ($previous instanceof PDOException && is_array($previous->errorInfo ?? null)) {
+                      $result['sqlstate'] = (string)($previous->errorInfo[0] ?? '');
+                      $result['driver_code'] = (string)($previous->errorInfo[1] ?? '');
+                  }
+              }
           }
           echo json_encode($result, JSON_UNESCAPED_SLASHES);
           PHP
