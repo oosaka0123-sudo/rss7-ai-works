@@ -2,6 +2,12 @@ name: Deploy Eging
 
 on:
   workflow_dispatch:
+  # A commit to this marker starts the existing secret-scoped FTPS workflow
+  # without requiring access to PC03 or copying production credentials.
+  push:
+    branches: [main]
+    paths:
+      - 'ops/eging-deploy-request.txt'
 
 permissions:
   contents: read
