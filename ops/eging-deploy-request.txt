@@ -1,0 +1,5 @@
+EGING comparison deployment request
+Date: 2026-10-13
+Source repo: oosaka0123-sudo/eging / main
+Scope: five-model verified Egi comparison page, five static detail pages, responsive styling, canonical handling.
+Use existing non-destructive deployment workflow; production secrets unchanged.
