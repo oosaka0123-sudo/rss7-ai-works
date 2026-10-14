@@ -1,5 +1,9 @@
-EGING comparison deployment request
-Date: 2026-10-13
-Source repo: oosaka0123-sudo/eging / main
-Scope: five-model verified Egi comparison page, five static detail pages, responsive styling, canonical handling.
-Use existing non-destructive deployment workflow; production secrets unchanged.
+EGING Gear Lab production release request
+Date JST: 2026-10-14
+Source: oosaka0123-sudo/eging main
+Merged release commit: dc29aa833b426e1e58983372e1de422a22d4c7e1
+PR: https://github.com/oosaka0123-sudo/eging/pull/34
+Scope: restructured navigation, mobile-first conditions -> 3/5 verified Egi models -> individual details -> manufacturer official / non-affiliate Yahoo model search, clear photo rights placeholders, accessible menu, sitemap, guide, origin no DB needed for core comparison.
+Tests: CI PHP lint passed; Playwright mobile/desktop smoke + condition E2E passed; Lighthouse workflow passed.
+Safety: no production secrets changed, no destructive DB migration, no rights-unverified manufacturer imagery, no unverified affiliate URLs.
+Deploy method: pre-existing secret-scoped GitHub Actions FTPS non-destructive sync only.
