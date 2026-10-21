@@ -1,9 +1,7 @@
-EGING Gear Lab final mobile-first release
-Date: 2026-10-14 JST
-Source repo: oosaka0123-sudo/eging main
-Verified commit: bfc3905f04bfabbad560b8d330eedb06fa308193
-Release PRs: #34 (working condition→5 models→detail), #35 (mobile density/docs)
-QA: CI php/browser journey and Lighthouse successful at PR head
-Deployment: existing non-destructive production FTPS broker only
-Scope: first-fold condition choices, compact 3-condition compare pills, small spacing, stylesheet cache bust (20261014r2), document source of truth.
-Security: no DB/Secret alteration, no unauthorised product photos, no unverified affiliate links.
+EGING release request — 2026-10-21 JST
+Source: oosaka0123-sudo/eging main
+Merged commit: 7bff74df28eb483f05477c0f8149121d8685dbac
+Release PR: https://github.com/oosaka0123-sudo/eging/pull/36
+Scope: link from every product comparison card to manufacturer's real product photos, replace confusing photo placeholder copy, update verified specifications date, canonical Daiwa citation.
+Tests: PHP lint, mobile/desktop smoke, condition→detail E2E including official photo links, Lighthouse all passed.
+Constraints: Do not modify or disclose DB secrets. Keep non-destructive FTPS deployment. No unapproved photo copies, no fictitious affiliate URLs.
