@@ -42,8 +42,10 @@ jobs:
 
       - name: Install deployment tools
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq lftp ffmpeg librsvg2-bin
+          # The redesigned site no longer needs ffmpeg or an opening movie.
+          # Avoid indefinite runner waits caused by unhealthy Ubuntu apt mirrors.
+          timeout 75s sudo apt-get update -qq -o Acquire::Retries=0 -o Acquire::http::Timeout=20 || echo "Using cached apt indexes"
+          timeout 150s sudo apt-get install -y -qq --no-install-recommends lftp librsvg2-bin
 
       - name: Build launch assets
         shell: bash
@@ -52,11 +54,6 @@ jobs:
           cd eging
           mkdir -p public/assets/video public/assets/brand
           rsvg-convert -w 1200 -h 630 public/assets/brand/og-default.svg -o public/assets/brand/og-default.png
-          ffmpeg -hide_banner -loglevel error -y \
-            -f lavfi -i "color=c=0x061014:s=1280x720:r=24:d=2.2" \
-            -vf "noise=alls=7:allf=t+u,drawgrid=w=128:h=72:t=1:c=0x65f5db@0.08,vignette=PI/5,fade=t=in:st=0:d=0.35,fade=t=out:st=1.85:d=0.35" \
-            -an -c:v libx264 -preset veryslow -crf 28 -pix_fmt yuv420p -movflags +faststart \
-            public/assets/video/opening.mp4
           cat > /tmp/eging-private.htaccess <<'HTACCESS'
           <IfModule mod_authz_core.c>
           Require all denied
