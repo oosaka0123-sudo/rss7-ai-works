@@ -1,7 +1,7 @@
-EGING release request — 2026-10-21 JST
-Source: oosaka0123-sudo/eging main
-Merged commit: 7bff74df28eb483f05477c0f8149121d8685dbac
-Release PR: https://github.com/oosaka0123-sudo/eging/pull/36
-Scope: link from every product comparison card to manufacturer's real product photos, replace confusing photo placeholder copy, update verified specifications date, canonical Daiwa citation.
-Tests: PHP lint, mobile/desktop smoke, condition→detail E2E including official photo links, Lighthouse all passed.
-Constraints: Do not modify or disclose DB secrets. Keep non-destructive FTPS deployment. No unapproved photo copies, no fictitious affiliate URLs.
+EGING GEAR LAB production release request
+JST date: 2026-10-23
+Source: oosaka0123-sudo/eging main at 99e58c06ed1892e7da45a3e9638310d01a4c50f1
+PR: https://github.com/oosaka0123-sudo/eging/pull/37
+Changes: Shimano 3.5-go deep Flash Boost (QE-D35V) 23g, approximately 1.9s/m; change deep-water scene to specialist + two standard models; keep normal all-five comparison; condition-specific spec tables; six tested product details; remove obsolete Lighthouse opening video build.
+QA: GitHub CI PHP lint & Playwright browser/E2E success, Lighthouse success.
+Security: use existing non-destructive FTPS sync; keep DB, secrets, affiliate arrangements and image rights intact; do not copy restricted product photos.
