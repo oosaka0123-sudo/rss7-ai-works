@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法人向け 情報漏洩リスク診断【デモ】社員アドレスの漏洩確認 | RSS7 AI Works</title>
+<meta name="description" content="会社ドメインの社員アドレスが過去の情報漏洩に含まれていないかを確認する法人向け診断を、架空の会社データで体験できるデモです。実際の診断ではありません。">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://rss7.net/security/business/">
+<meta property="og:title" content="法人向け 情報漏洩リスク診断【デモ】 | RSS7 AI Works">
+<meta property="og:description" content="社員アドレスの漏洩状況を一覧にする法人向け診断を、架空の会社データで体験できるデモ。実際の診断ではありません。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rss7.net/security/business/">
+<meta property="og:image" content="https://rss7.net/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="https://rss7.net/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+JP:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/security.css">
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<div class="topbar">
+<div class="demo-banner" role="note"><strong>デモ・架空データ</strong>このページは体験用のデモです。実際の漏洩診断は行っていません。</div>
+<header class="site-header">
+  <a href="https://rss7.net/" class="logo"><span class="logo-mark" aria-hidden="true">R7</span>RSS7 <em>AI</em> Works<small>SECURITY</small></a>
+  <button class="menu-btn" type="button" aria-label="メニューを開く" aria-controls="siteNav" aria-expanded="false"><span></span><span></span><span></span></button>
+  <nav class="nav" id="siteNav" aria-label="主要ナビゲーション">
+    <a href="../">漏洩診断デモ</a>
+    <a href="../personal/">個人の方</a>
+    <a href="./" aria-current="page">法人の方</a>
+    <a href="https://rss7.net/cyber-security.html">セキュリティ対策</a>
+    <a href="https://rss7.net/contact.html">お問い合わせ</a>
+  </nav>
+</header>
+</div>
+
+<main id="main">
+  <section class="hero compact">
+    <div class="hero-inner">
+      <p class="demo-tag">法人向け・デモ版</p>
+      <h1><span class="en">FOR BUSINESS</span>社員のアドレスが、攻撃の入口になっていませんか。</h1>
+      <p>業務用のメールアドレスで外部サービスに登録し、そのサービスから情報が漏れると、なりすましメールや不正ログインの足がかりになります。法人向け診断では、会社ドメインのアドレスの漏洩状況をまとめて把握できます。</p>
+      <div class="actions-row"><a class="btn" href="../demo/business.html">法人向けデモを試す</a></div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <h2>ダッシュボードで把握できること</h2>
+    <div class="grid-3">
+      <div class="panel"><h3>影響を受けたアドレス数</h3><p>漏洩に含まれていた社員アドレスの数と、そのうちパスワードも流出したアドレスの数。</p></div>
+      <div class="panel"><h3>漏洩ごとの影響範囲</h3><p>どのサービスの漏洩で、何人分のアドレスが含まれていたか。優先して対応すべき漏洩がわかります。</p></div>
+      <div class="panel"><h3>アドレス別の一覧</h3><p>担当者ごとに、パスワード変更や注意喚起を個別に案内するための一覧です。</p></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap narrow">
+      <h2>ドメインの所有確認が前提です</h2>
+      <p class="lead">他社のドメインを勝手に調べることはできません。実際の診断では、ドメインの管理者であることを確認してから照会します。</p>
+      <ol class="steps">
+        <li><div><strong>DNSに確認用のTXTレコードを追加</strong><span>ドメインを管理している担当者だけが追加できる、確認用の文字列です。</span></div></li>
+        <li><div><strong>所有を確認</strong><span>TXTレコードが追加されたことを確認できた会社だけが対象になります。</span></div></li>
+        <li><div><strong>漏洩状況を照会</strong><span>確認できたデータだけを根拠に、ダッシュボードとして表示します。</span></div></li>
+      </ol>
+      <p class="note warn">実際のサービスでは、漏洩情報の提供元が定める検証手続きも別途必要になります。営業目的で、許可なく他社の漏洩状況を調べることはありません。</p>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>架空の会社で、ダッシュボードを体験</h2>
+    <p>「デモ商事株式会社（架空）」を例に、所有確認からダッシュボードまでを体験できます。</p>
+    <div class="actions-row">
+      <a class="btn" href="../demo/business.html">法人向けデモを試す</a>
+      <a class="btn ghost" href="https://rss7.net/contact.html">セキュリティ対策を相談する</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <nav aria-label="フッター">
+      <a href="https://rss7.net/">RSS7 AI Works</a>
+      <a href="https://rss7.net/cyber-security.html">サイバーセキュリティ対策</a>
+      <a href="https://rss7.net/privacy.html">プライバシーポリシー</a>
+      <a href="https://rss7.net/contact.html">お問い合わせ</a>
+    </nav>
+    <p>© 2026 RSS7 AI Works</p>
+  </div>
+</footer>
+<script src="../assets/js/common.js"></script>
+</body>
+</html>

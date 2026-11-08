@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>個人向け診断デモ（架空データ） | RSS7 AI Works</title>
+<meta name="description" content="架空の利用者とサンプルのパスワードを選んで、情報漏洩リスク診断の結果画面を体験するデモです。実際の診断ではありません。">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://rss7.net/security/demo/personal.html">
+<meta property="og:url" content="https://rss7.net/security/demo/personal.html">
+<meta property="og:image" content="https://rss7.net/images/og-image.jpg">
+<meta property="og:title" content="個人向け診断デモ（架空データ）">
+<meta property="og:description" content="架空データによる情報漏洩リスク診断のデモ。実際の診断ではありません。">
+<meta property="og:type" content="website">
+<link rel="icon" href="https://rss7.net/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+JP:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/security.css">
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<div class="topbar">
+<div class="demo-banner" role="note"><strong>デモ・架空データ</strong>表示される利用者・サービス・漏洩情報はすべて架空です。実際の診断ではありません。</div>
+<header class="site-header">
+  <a href="https://rss7.net/" class="logo"><span class="logo-mark" aria-hidden="true">R7</span>RSS7 <em>AI</em> Works<small>SECURITY</small></a>
+  <button class="menu-btn" type="button" aria-label="メニューを開く" aria-controls="siteNav" aria-expanded="false"><span></span><span></span><span></span></button>
+  <nav class="nav" id="siteNav" aria-label="主要ナビゲーション">
+    <a href="../">漏洩診断デモ</a>
+    <a href="../personal/" aria-current="page">個人の方</a>
+    <a href="../business/">法人の方</a>
+    <a href="https://rss7.net/cyber-security.html">セキュリティ対策</a>
+    <a href="https://rss7.net/contact.html">お問い合わせ</a>
+  </nav>
+</header>
+</div>
+
+<main id="main">
+  <section class="hero compact">
+    <div class="hero-inner">
+      <p class="demo-tag">診断デモ・架空データ</p>
+      <h1><span class="en">DEMO / INDIVIDUAL</span>架空の利用者で、診断を体験</h1>
+      <p>あなたの情報は使いません。用意された架空の利用者を選ぶと、実際の診断と同じ形式の結果画面を表示します。</p>
+    </div>
+  </section>
+
+  <section class="wrap narrow">
+    <h2>メールアドレスの漏洩診断</h2>
+    <form id="emailDemo">
+      <fieldset class="choices" id="personaList">
+        <legend>架空の利用者を選んでください</legend>
+      </fieldset>
+      <div class="actions-row" style="margin-top:16px"><button class="btn" type="submit">デモ診断を開始</button></div>
+    </form>
+
+    <div class="console" id="emailConsole" hidden aria-live="polite">
+      <div class="console-head"><span>DEMO SCAN</span><span class="chip">デモ・架空データ</span></div>
+      <div class="scanbar"></div>
+      <div class="console-body"></div>
+    </div>
+
+    <div class="result" id="emailResult" hidden>
+      <h2 class="result-title">診断結果<span class="demo-chip">デモ・架空データ</span></h2>
+      <div class="result-head" id="emailHead">
+        <div class="meter" aria-hidden="true"><b>0</b><small>件</small></div>
+        <div><span class="risk-label"></span><h3></h3><p></p></div>
+      </div>
+      <div id="breachSection">
+        <h3 class="sub-h">含まれていた漏洩（架空）</h3>
+        <div id="breachList"></div>
+      </div>
+      <p id="breachEmpty" class="panel" hidden>確認したデータには含まれていませんでした（デモ）。</p>
+      <h3 class="sub-h">やること（優先順）</h3>
+      <ol class="action-list" id="actionList"></ol>
+      <div class="plan-soon" role="note">
+        <div class="plan-soon-head"><strong>詳細診断レポート（有料）</strong><span class="soon-badge">準備中</span></div>
+        <p class="plan-price">予定価格 2,980円（税込）</p>
+        <p class="plan-status">サービスごとの対策手順と、保存できるレポートを提供する予定です。現在は準備中のため、お申し込みやお支払いは受け付けていません。</p>
+      </div><!-- /plan-soon -->
+      <p class="source" id="emailDisclaimer"></p>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap narrow">
+      <h2>パスワードの確認（仕組みのデモ）</h2>
+      <p class="lead">サンプルのパスワードを選ぶと、ブラウザの中でハッシュ値を計算し、実際の診断で送信される先頭5文字を示します。デモでは何も送信しません。</p>
+      <form id="pwDemo">
+        <fieldset class="choices" id="pwList">
+          <legend>サンプルのパスワードを選んでください</legend>
+        </fieldset>
+        <div class="actions-row" style="margin-top:16px"><button class="btn" type="submit">仕組みを確認する</button></div>
+      </form>
+      <div class="result" id="pwResult" hidden>
+        <h3 class="result-title sub-h">確認結果<span class="demo-chip">デモ・架空データ</span></h3>
+        <dl class="hashline">
+          <dt>SHA-1</dt><dd class="mono"><span class="prefix" id="pwPrefix"></span><span class="rest" id="pwRest"></span></dd>
+          <dt>送る値</dt><dd>先頭5文字だけ（色付きの部分）。実際の診断で送信される値で、デモでは送信しません</dd>
+          <dt>送らない値</dt><dd>パスワード本体と、残りの35文字</dd>
+        </dl>
+        <div class="result-head" id="pwHead">
+          <div class="meter" aria-hidden="true"><b></b><small>判定</small></div>
+          <div><span class="risk-label"></span><h3></h3><p></p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>法人向けのデモもご覧ください</h2>
+    <p>架空の会社を例に、ドメインの所有確認からダッシュボードまでを体験できます。</p>
+    <div class="actions-row"><a class="btn" href="business.html">法人向けデモへ</a><a class="btn ghost" href="../">デモのトップへ</a></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <nav aria-label="フッター">
+      <a href="https://rss7.net/">RSS7 AI Works</a>
+      <a href="https://rss7.net/cyber-security.html">サイバーセキュリティ対策</a>
+      <a href="https://rss7.net/privacy.html">プライバシーポリシー</a>
+      <a href="https://rss7.net/contact.html">お問い合わせ</a>
+    </nav>
+    <p>© 2026 RSS7 AI Works</p>
+  </div>
+</footer>
+<script src="../assets/js/common.js"></script>
+<script type="module" src="../assets/js/demo-personal.js"></script>
+</body>
+</html>
