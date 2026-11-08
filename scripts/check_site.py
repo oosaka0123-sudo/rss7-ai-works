@@ -102,6 +102,8 @@ def check_sitemap() -> None:
             error(f"sitemap.xml: 対象外URL {location}")
             continue
         relative = unquote(parsed.path.lstrip("/")) or "index.html"
+        if relative.endswith("/"):
+            relative += "index.html"
         if not (ROOT / relative).is_file():
             error(f"sitemap.xml: ローカルにないURL {location}")
     for page in MAIN_PAGES:

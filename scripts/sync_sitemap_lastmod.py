@@ -54,6 +54,8 @@ def git_date(path: Path) -> str:
 def source_paths_for_url(url: str) -> list[Path]:
     parsed = urlparse(url)
     relative = unquote(parsed.path.lstrip("/")) or "index.html"
+    if relative.endswith("/"):
+        relative += "index.html"
     paths = [ROOT / relative]
     if relative == "blog.html":
         paths.append(ROOT / "data/articles.json")
